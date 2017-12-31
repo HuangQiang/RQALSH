@@ -13,9 +13,9 @@
 //
 // Authors: Qiang Huang  (huangq2011@gmail.com, huangq25@mail2.sysu.edu.cn)
 //
-// Created on:       2014-03-12
-// Last Modified on: 2016-09-21
-// Version 1.2.2
+// Created on:       2016-01-12
+// Last Modified on: 2017-09-01
+// Version 1.0.0
 // -----------------------------------------------------------------------------
 #include <stdio.h>
 #include <errno.h>
