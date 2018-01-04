@@ -2,25 +2,28 @@
 make
 rm *.o
 
+
 # Parameters of RQALSH:
-#    -alg  (integer)   options of algorithms (0 - 3)
-#    -d    (integer)   dimensionality of the dataset
-#    -n    (integer)   cardinality of the dataset
-#    -qn   (integer)   number of queries
-#    -B    (integer)   page size
-#    -c    (real)      approximation ratio (c > 1)
-#    -ds   (string)    file path of the dataset
-#    -qs   (string)    file path of the query set
-#    -ts   (string)    file path of the ground truth set
-#    -df   (string)    data folder to store new format of data
-#    -of   (string)    output folder to store info of rqalsh
+#    -alg   (integer)   options of algorithms (0 - 3)
+#    -n     (integer)   cardinality of the dataset
+#    -qn    (integer)   number of queries
+#    -d     (integer)   dimensionality of the dataset
+#    -B     (integer)   page size
+#    -beta  (real)      the percentage of false positive
+#    -delta (real)      error probability
+#    -c     (real)      approximation ratio (c > 1)
+#    -ds    (string)    file path of the dataset
+#    -qs    (string)    file path of the query set
+#    -ts    (string)    file path of the ground truth set
+#    -df    (string)    data folder to store new format of data
+#    -of    (string)    output folder to store the results of rqalsh
 #
 # The options of algorithms (-alg) are:
 #    0 - Ground-Truth
 #        Parameters: -alg 0 -n -qn -d -ds -qs -ts -of
 #
 #    1 - Indexing
-#        Parameters: -alg 1 -n -d -B -c -ds -df -of
+#        Parameters: -alg 1 -n -d -B -beta -delta -c -ds -df -of
 #
 #    2 - RQALSH
 #        Parameters: -alg 2 -qn -d -qs -ts -df -of
@@ -115,4 +118,6 @@ do
 	./rqalsh -alg 1 -n 30159 -d 5408 -B 65536 -beta 100 -delta ${delta} -c 2.0 -ds ${dataPath}/P53/P53.ds -df ${dataPath}/P53/ -of ${outPath}/result2.0/rqalsh_delta=${delta}/P53/
 	
 	./rqalsh -alg 2 -qn 1000 -d 5408 -qs ${dataPath}/P53/P53.q -ts ${dataPath}/P53/P53ID.fn2.0 -df ${dataPath}/P53/ -of ${outPath}/result2.0/rqalsh_delta=${delta}/P53/
-done
+doneof
+#
+# NOTE: Each parameter is required to be separated by one space
