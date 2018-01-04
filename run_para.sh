@@ -2,7 +2,7 @@
 make
 rm *.o
 
-# Parameters of QALSH:
+# Parameters of RQALSH:
 #    -alg  (integer)   options of algorithms (0 - 3)
 #    -d    (integer)   dimensionality of the dataset
 #    -n    (integer)   cardinality of the dataset
