@@ -1,16 +1,18 @@
 # RQALSH: Reverse Query-Aware Locality-Sensitive Hashing Scheme
 
-Version: 1.0.0
+Version: 1.0.1
 
-Release date: 1 January 2018
+Release date: 01-01-2018
+
+Last Modified: 23-04-2018
 
 
 Introduction
 --------
 
-This package is written in the C++ programming language. It provides an 
-external LSH scheme (RQALSH) for c-Approximate Furthest Neighbor (or simply 
-c-AFN) search under Euclidean distance.
+This package is written in the C++ programming language. It provides two 
+external LSH schemes RQALSH and RQALSH* for c-Approximate Furthest Neighbor 
+(or simply c-AFN) search under Euclidean distance.
 
 How to use this Package?
 --------
@@ -54,12 +56,12 @@ Relevant Papers
 The paper for the package of RQALSH has been published in ICDE 2017 and TKDE 2017, 
 which are displayed as follows:
 
-* **Qiang Huang, Jianlin Feng, Qiong Fang, Wilfred Ng. Two Efficient Hashing Schemes 
-for High-Dimensional Furthest Neighbor Search. IEEE Transactions on Knowledge and 
-Data Engineering (TKDE) 29(12), 2772 - 2785, 2017.**
-
 * **Qiang Huang, Jianlin Feng, Qiong Fang. Reverse Query-Aware Locality-Sensitive 
 Hashing for High-Dimensional Furthest Neighbor Search. IEEE International Conference 
 on Data Engineering (ICDE), 167 - 170, 2017.**
+
+* **Qiang Huang, Jianlin Feng, Qiong Fang, Wilfred Ng. Two Efficient Hashing Schemes 
+for High-Dimensional Furthest Neighbor Search. IEEE Transactions on Knowledge and 
+Data Engineering (TKDE) 29(12), 2772 - 2785, 2017.**
 
 If you use the package for publications, please cite the papers above.
