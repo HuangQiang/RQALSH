@@ -1,46 +1,70 @@
-#ifndef __APPROXIMATE_FURTHEST_NEIGHBOR_H
-#define __APPROXIMATE_FURTHEST_NEIGHBOR_H
+#ifndef __AFN_H
+#define __AFN_H
 
 // -----------------------------------------------------------------------------
-int ground_truth(					// output ground truth
-	int   n,							// number of data points
-	int   qn,							// number of query points
-	int   d,							// dimension of space
-	char* data_set,						// address of data set
-	char* query_set,					// address of query set
-	char* truth_set,					// address of ground truth file
-	char* output_folder);				// folder to store info of rqalsh
-	
-// -----------------------------------------------------------------------------
-int indexing(						// build hash tables for the dataset
-	int   n,							// number of data points
-	int   d,							// dimension of space
-	int   B,							// page size
-	int   beta,
-	float delta,
-	float ratio,						// approximation ratio
-	char* data_set,						// address of data set
-	char* data_folder,					// folder to store new format of data
-	char* output_folder);				// folder to store info of rqalsh
-
-// -----------------------------------------------------------------------------
-int rqalsh_afn(						// c-k-AFN search
-	int   qn,							// number of query points
+int ground_truth(					// find ground truth
+	int   n,							// number of data objects
+	int   qn,							// number of query objects
 	int   d,							// dimensionality
-	char* query_set,					// path of query set
-	char* truth_set,					// groundtrue file
-	char* data_folder,					// folder to store new format of data
-	char* output_folder);				// output folder
+	const char *data_set,				// address of data  set
+	const char *query_set,				// address of query set
+	const char *truth_set);				// address of truth set
 
 // -----------------------------------------------------------------------------
-int linear_scan(					// brute-force linear scan
-	int   n,							// number of data points
-	int   qn,							// number of query points
-	int   d,							// dimension of space
+int indexing_of_rqalsh_star(		// indexing of RQALSH_Star
+	int   n,							// number of data objects
+	int   d,							// dimensionality
 	int   B,							// page size
-	char* query_set,					// address of query set
-	char* truth_set,					// address of ground truth file
-	char* data_folder,					// folder to store new format of data
-	char* output_folder);				// output folder
+	int   L,							// number of projection
+	int   M,							// number of candidates
+	int   beta,							// false positive percentage
+	float delta,						// error probability
+	float ratio,						// approximation ratio
+	const char *data_set,				// address of data set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
 
-#endif
+// -----------------------------------------------------------------------------
+int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH_Star
+	int   qn,							// number of query objects
+	int   d,							// dimensionality
+	int   L,							// number of projection
+	int   M,							// number of candidates
+	const char *query_set,				// address of query set
+	const char *truth_set,				// address of truth set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int indexing_of_rqalsh(				// indexing of RQALSH
+	int   n,							// number of data objects
+	int   d,							// dimensionality
+	int   B,							// page size
+	int   beta,							// false positive percentage
+	float delta,						// error probability
+	float ratio,						// approximation ratio
+	const char *data_set,				// address of data set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
+	int   qn,							// number of query objects
+	int   d,							// dimensionality
+	const char *query_set,				// address of query set
+	const char *truth_set,				// address of truth set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int linear_scan(					// brute-force linear scan (data in disk)
+	int   n,							// number of data objects
+	int   qn,							// number of query objects
+	int   d,							// dimensionality
+	int   B,							// page size
+	const char *query_set,				// address of query set
+	const char *truth_set,				// address of truth set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
+
+#endif // __AFN_H
