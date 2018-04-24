@@ -36,7 +36,7 @@ and P53 we used can be downloaded from the following links:
 * P53: https://drive.google.com/open?id=1hjGvcq29WsgHpGoz0vCdCYAUR453aY29
 
 
-Authors
+Author
 --------
 
 * **Qiang Huang**
