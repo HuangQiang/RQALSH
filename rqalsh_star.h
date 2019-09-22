@@ -23,15 +23,18 @@ public:
 		int   beta,						// false positive percentage
 		float delta,					// error probability
 		float ratio,					// approximation ratio
-		const char *index_path,			// index path
-		const float **data);			// data objects
+		const float **data, 			// data objects
+		const char *index_path);		// index path
 
 	// -------------------------------------------------------------------------
 	int load(   					// load index
 		const char *index_path);		// index path
 
 	// -------------------------------------------------------------------------
-	int kfn(						// c-k-AFN search
+	void display();			        // display parameters
+
+	// -------------------------------------------------------------------------
+	long long kfn(					// c-k-AFN search
 		int top_k,						// top-k value
 		const float *query,				// query objects
 		const char *data_folder,		// data folder
@@ -64,9 +67,6 @@ protected:
 	// -------------------------------------------------------------------------
 	int data_dependent_select(		// data dependent selection
 		const float *shift_data);		// shift data objects
-
-	// -------------------------------------------------------------------------
-	void display();			        // display parameters
 
 	// -------------------------------------------------------------------------
 	int write_params();				// write parameters to disk

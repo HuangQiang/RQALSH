@@ -1,11 +1,19 @@
 #ifndef __UTIL_H
 #define __UTIL_H
 
+class MaxK_List;
+
+extern timeval g_start_time;		// global parameter: start time
+extern timeval g_end_time;			// global parameter: end time
+
+extern float g_runtime;				// global parameter: running time
+extern float g_ratio;				// global parameter: overall ratio
+extern float g_recall;				// global parameter: recall
+extern long long g_io;
+
 // -----------------------------------------------------------------------------
 //  basic data structures
 // -----------------------------------------------------------------------------
-class  MaxK_List;
-
 struct Result {						// basic data structure 
 	float key_;
 	int   id_;
@@ -21,26 +29,10 @@ int ResultCompDesc(					// compare function for qsort (descending)
 	const void *e1,						// 1st element
 	const void *e2);					// 2nd element
 
-// -----------------------------------------------------------------------------
-//  uitlity functions
 // -------------------------------------------------------------------------
-int create_dir(						// create directory
+void create_dir(					// create directory
 	char *path);						// input path
 
-// -----------------------------------------------------------------------------
-float calc_l2_dist(					// calc L_2 norm (data type is float)
-	int dim,							// dimension
-	const float* vec1,					// 1st point
-	const float* vec2);					// 2nd point
-
-// -----------------------------------------------------------------------------
-float calc_recall(					// calc recall (percentage)
-	int k,								// top-k value
-	const Result *R,					// ground truth results 
-	MaxK_List *list);					// results returned by algorithms
-
-// -----------------------------------------------------------------------------
-//  functions used for the input/output of data sets and query sets.
 // -----------------------------------------------------------------------------
 int read_data(						// read data/query set from disk
 	int   n,							// number of data/query objects
@@ -54,7 +46,7 @@ int write_data_new_form(			// write dataset with new format
 	int   d,							// dimensionality
 	int   B,							// page size
 	const float **data,					// data set
-	const char *output_path);			// output path
+	const char *out_path);				// output path
 
 // -----------------------------------------------------------------------------
 void get_data_filename(				// get file name of data
@@ -104,7 +96,25 @@ int read_ground_truth(				// read ground truth results from disk
 	Result **R);						// ground truth results (return)
 
 // -----------------------------------------------------------------------------
-int linear(							// linear scan search
+float calc_l2_dist(					// calc L_2 norm (data type is float)
+	int dim,							// dimension
+	const float *p1,					// 1st point
+	const float *p2);					// 2nd point
+
+// -----------------------------------------------------------------------------
+float calc_recall(					// calc recall (percentage)
+	int k,								// top-k value
+	const Result *R,					// ground truth results 
+	MaxK_List *list);					// results returned by algorithms
+
+// -----------------------------------------------------------------------------
+float calc_recall(					// calc recall (percentage)
+	int k,								// top-k value
+	const Result *R,					// ground truth results 
+	const Result *result);				// results returned by algorithms
+
+// -----------------------------------------------------------------------------
+long long linear(					// linear scan search
 	int   n,							// number of data objects
 	int   d,							// dimensionality
 	int   B,							// page size
@@ -112,5 +122,14 @@ int linear(							// linear scan search
 	const float *query,					// query object
 	const char *data_folder,			// data folder
 	MaxK_List *list);					// k-FN results (return)
+
+// -----------------------------------------------------------------------------
+int ground_truth(					// find ground truth
+	int   n,							// number of data  objects
+	int   qn,							// number of query objects
+	int   d,							// dimensionality
+	const float **data,					// data set
+	const float **query,				// query set
+	const char  *truth_set);			// address of truth set
 
 #endif

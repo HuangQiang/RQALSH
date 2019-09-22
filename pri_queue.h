@@ -1,7 +1,6 @@
 #ifndef __PRI_QUEUE_H
 #define __PRI_QUEUE_H
 
-
 struct Result;
 
 // -----------------------------------------------------------------------------
@@ -32,7 +31,10 @@ public:
 	int size() { return num_; }
 
 	// -------------------------------------------------------------------------
-	bool isFull();					// is full?
+	bool isFull() {					// is full?
+		if (num_ >= k_) return true;
+		else return false;
+	}
 
 	// -------------------------------------------------------------------------
 	float insert(					// insert item

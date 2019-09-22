@@ -1,15 +1,15 @@
 #ifndef __RQALSH_H
 #define __RQALSH_H
 
-class BNode;
-class BTree;
+class QAB_Node;
+class QAB_Tree;
 class MaxK_List;
 
 // -----------------------------------------------------------------------------
 //  PageBuffer: a buffer of one page for c-k-AFN search
 // -----------------------------------------------------------------------------
 struct PageBuffer {
-	BLeafNode *leaf_node_;			// leaf node (level = 0)
+	QAB_LeafNode *leaf_node_;		// leaf node (level = 0)
 	int index_pos_;					// cur pos of key in leaf node
 	int leaf_pos_;					// cur pos of object id in leaf node
 	int size_;						// size for one scan
@@ -32,22 +32,25 @@ public:
 		int   beta,						// false positive percentage
 		float delta,					// error probability
 		float ratio,					// approximation ratio
-		const char *index_path,			// index path
-		const float **data);			// data objects
+		const float **data,				// data objects
+		const char *index_path);		// index path
 
 	// -------------------------------------------------------------------------
 	int load(						// load index
 		const char *index_path);		// index path
 
 	// -------------------------------------------------------------------------
-	int kfn(						// c-k-AFN search
+	void display();					// display parameters
+
+	// -------------------------------------------------------------------------
+	long long kfn(					// c-k-AFN search
 		int top_k,						// top-k value
 		const float *query,				// query object
 		const char *data_folder,		// data folder
 		MaxK_List *list);				// k-FN results (return)
 	
 	// -------------------------------------------------------------------------
-	int kfn(						// c-k-AFN search
+	long long kfn(					// c-k-AFN search
 		int top_k,						// top-k value
 		const float *query,				// query object
 		const int *object_id,			// object id mapping
@@ -70,7 +73,7 @@ protected:
 	int   m_;						// number of hashtables
 	int   l_;						// collision threshold
 	float *a_array_;				// hash functions
-	BTree **trees_;					// b-trees
+	QAB_Tree **trees_;					// b-trees
 
 	int   dist_io_;					// io for computing distance
 	int   page_io_;					// io for scanning pages
@@ -80,8 +83,8 @@ protected:
 	float *data_;					// one data object
 	float *q_val_;					// hash value of query
 	
-	PageBuffer *lptr_;				// left  pointer of B+ Tree
-	PageBuffer *rptr_;				// right pointer of B+ Tree
+	PageBuffer **lptr_;				// left  pointer of B+ Tree
+	PageBuffer **rptr_;				// right pointer of B+ Tree
 
 	// -------------------------------------------------------------------------
 	void calc_params();				// calc parameters
@@ -94,15 +97,12 @@ protected:
 	void gen_hash_func();			// generate hash functions
 
 	// -------------------------------------------------------------------------
-	void display();					// display parameters
-
-	// -------------------------------------------------------------------------
 	int bulkload(					// build B+ Trees by bulkloading
 		const float** data);			// data set
 
 	// -------------------------------------------------------------------------
 	float calc_hash_value(			// calc hash value
-		int table_id,					// hash table id
+		int tid,						// hash table id
 		const float *point);			// one data object
 
 	// -------------------------------------------------------------------------
@@ -121,10 +121,7 @@ protected:
 		const float *query);			// query object
 
 	// -------------------------------------------------------------------------
-	float find_radius(				// find proper radius
-		const float *q_val,				// hash value of query
-		const PageBuffer *lptr,			// left page buffer
-		const PageBuffer *rptr);		// right page buffer
+	float find_radius();			// find proper radius
 
 	// -------------------------------------------------------------------------
 	void update_left_buffer(		// update left buffer

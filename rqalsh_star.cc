@@ -19,9 +19,7 @@ RQALSH_Star::RQALSH_Star()			// constructor
 // -----------------------------------------------------------------------------
 RQALSH_Star::~RQALSH_Star()			// destructor
 {
-	if (sample_id_ != NULL) {
-		delete[] sample_id_; sample_id_ = NULL;
-	}
+	delete[] sample_id_; sample_id_ = NULL;
 	if (lsh_ != NULL) {
 		delete lsh_; lsh_ = NULL;
 	}
@@ -37,8 +35,8 @@ int RQALSH_Star::build(				// build index
 	int   beta,							// false positive percentage
 	float delta,						// error probability
 	float ratio,						// approximation ratio
-	const char *index_path,				// index path
-	const float **data)					// data objects
+	const float **data,					// data objects
+	const char *index_path)				// index path
 {
 	// -------------------------------------------------------------------------
 	//  init parameters
@@ -59,7 +57,6 @@ int RQALSH_Star::build(				// build index
 	//  build hash tables (bulkloading)
 	// -------------------------------------------------------------------------
 	bulkload(data);
-	// display();
 	
 	return 0;
 }
@@ -97,7 +94,7 @@ int RQALSH_Star::bulkload(			// bulkloading for each block
 	if (sample_size_ > CANDIDATES) {
 		lsh_ = new RQALSH();
 		lsh_->build(sample_size_, dim_, B_, beta_, delta_, appr_ratio_, 
-			index_path_, (const float **) sample_data);
+			(const float **) sample_data, index_path_);
 	}
 
 	// -------------------------------------------------------------------------
@@ -247,17 +244,16 @@ int RQALSH_Star::data_dependent_select( // drusilla select
 // -----------------------------------------------------------------------------
 void RQALSH_Star::display()			// display parameters
 {
-	printf("Parameters of RQALSH_Star:\n");
-	printf("    n           = %d\n", n_pts_);
-	printf("    d           = %d\n", dim_);
-	printf("    B           = %d\n", B_);
-	printf("    L           = %d\n", L_);
-	printf("    M           = %d\n", M_);
-	printf("    beta        = %d\n", beta_);
-	printf("    delta       = %f\n", delta_);
-	printf("    c           = %f\n", appr_ratio_);
-	printf("    sample_size = %d\n", sample_size_);
-	printf("\n");
+	printf("Parameters of RQALSH*:\n");
+	printf("    n           = %d\n",   n_pts_);
+	printf("    d           = %d\n",   dim_);
+	printf("    B           = %d\n",   B_);
+	printf("    L           = %d\n",   L_);
+	printf("    M           = %d\n",   M_);
+	printf("    beta        = %d\n",   beta_);
+	printf("    delta       = %f\n",   delta_);
+	printf("    c           = %.1f\n", appr_ratio_);
+	printf("    sample_size = %d\n\n", sample_size_);
 }
 
 // -----------------------------------------------------------------------------
@@ -340,7 +336,7 @@ int RQALSH_Star::read_params()		// read parameters from disk
 }
 
 // -----------------------------------------------------------------------------
-int RQALSH_Star::kfn(				// c-k-AFN search
+long long RQALSH_Star::kfn(			// c-k-AFN search
 	int top_k,							// top-k value
 	const float *query,					// query object
 	const char *data_folder,			// data folder
@@ -365,7 +361,7 @@ int RQALSH_Star::kfn(				// c-k-AFN search
 		float dist = calc_l2_dist(dim_, (const float*) data, query);
 		list->insert(dist, id + 1);
 	}
-	delete [] data; data = NULL;
+	delete[] data; data = NULL;
 	
-	return sample_size_;
+	return (long long) sample_size_;
 }

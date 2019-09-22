@@ -30,6 +30,7 @@
 #include <fstream>
 #include <iostream>
 #include <stack>
+#include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -47,6 +48,10 @@
 #include "block_file.h"
 #include "b_node.h"
 #include "b_tree.h"
+#include "qab_node.h"
+#include "qab_tree.h"
+#include "qdafn.h"
+#include "drusilla_select.h"
 #include "rqalsh.h"
 #include "rqalsh_star.h"
 #include "afn.h"

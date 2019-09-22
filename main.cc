@@ -7,7 +7,7 @@ void usage() 						// display usage of the package
 		"--------------------------------------------------------------------\n"
 		" Usage of the Package for External c-k-AFN Search:                  \n"
 		"--------------------------------------------------------------------\n"
-		"    -alg   (integer)   options of algorithms\n"
+		"    -alg   (integer)   options of algorithms (0 - 9)\n"
 		"    -n     (integer)   number of data  objects\n"
 		"    -qn    (integer)   number of query objects\n"
 		"    -d     (integer)   dimensionality\n"
@@ -41,8 +41,20 @@ void usage() 						// display usage of the package
 		"    4 - c-k-AFN Search of RQALSH\n"
 		"        Params: -alg 4 -qn -d -qs -ts -df -of\n"
 		"\n"
-		"    5 - k-FN Search of Linear Scan\n"
-		"        Params: -alg 5 -n -qn -d -B -qs -ts -df -of\n"
+		"    5 - Indexing of Drusilla_Select\n"
+		"        Params: -alg 5 -n -d -B -L -M -ds -df -of\n\n"
+		"\n"
+		"    6 - c-k-AFN Search of Drusilla_Select\n"
+		"        Params: -alg 6 -qn -d -qs -ts -df -of\n"
+		"\n"
+		"    7 - Indexing of QDAFN\n"
+		"        Params: -alg 7 -n -d -B -L -M -c -ds -df -of\n\n"
+		"\n"
+		"    8 - c-k-AFN Search of QDAFN\n"
+		"        Params: -alg 8 -qn -d -qs -ts -df -of\n"
+		"\n"
+		"    9 - k-FN Search of Linear Scan\n"
+		"        Params: -alg 9 -n -qn -d -B -qs -ts -df -of\n"
 		"\n"
 		"--------------------------------------------------------------------\n"
 		" Author: Qiang HUANG  (huangq2011@gmail.com)                        \n"
@@ -53,33 +65,36 @@ void usage() 						// display usage of the package
 // -----------------------------------------------------------------------------
 int main(int nargs, char** args)
 {
-	srand((unsigned)time(NULL));	// set the random seed
+	srand(6);						// srand((unsigned)time(NULL));
 	// usage();
 
-	int   alg   = -1;				// option of algorithm
-	int   n     = -1;				// cardinality
-	int   qn    = -1;				// query number
-	int   d     = -1;				// dimensionality
-	int   B     = -1;				// page size
-	int   L     = -1;				// number of projection
-	int   M     = -1;				// number of candidates
-	int   beta  = -1;			    // false positive percentage
-	float delta = -1.0f;			// error probability
-	float ratio = -1.0f;			// approximation ratio
-	char  data_set[200];			// address of data  set
-	char  query_set[200];			// address of query set
-	char  truth_set[200];			// address of truth set
-	char  data_folder[200];			// data folder
-	char  output_folder[200];		// output folder
+	char   data_set[200];			// address of data  set
+	char   query_set[200];			// address of query set
+	char   truth_set[200];			// address of truth set
+	char   data_folder[200];		// data folder
+	char   output_folder[200];		// output folder
 
-	bool failed = false;
-	int  cnt = 1;
+	int    alg     = -1;			// option of algorithm
+	int    n       = -1;			// cardinality
+	int    qn      = -1;			// query number
+	int    d       = -1;			// dimensionality
+	int    B       = -1;			// page size
+	int    L       = -1;			// number of projection
+	int    M       = -1;			// number of candidates
+	int    beta    = -1;			// false positive percentage
+	float  delta   = -1.0f;			// error probability
+	float  ratio   = -1.0f;			// approximation ratio
+	float  **data  = NULL;			// data set
+	float  **query = NULL;			// query set
+	Result **R     = NULL;			// k-NN ground truth
+	bool   failed  = false;
+	int    cnt     = 1;
 
 	while (cnt < nargs && !failed) {
 		if (strcmp(args[cnt], "-alg") == 0) {
 			alg = atoi(args[++cnt]);
 			printf("alg           = %d\n", alg);
-			if (alg < 0 || alg > 5) {
+			if (alg < 0 || alg > 9) {
 				failed = true;
 				break;
 			}
@@ -119,7 +134,7 @@ int main(int nargs, char** args)
 		else if (strcmp(args[cnt], "-L") == 0) {
 			L = atoi(args[++cnt]);
 			printf("L             = %d\n", L);
-			if (L <= 0) {
+			if (L < 0) {
 				failed = true;
 				break;
 			}
@@ -127,7 +142,7 @@ int main(int nargs, char** args)
 		else if (strcmp(args[cnt], "-M") == 0) {
 			M = atoi(args[++cnt]);
 			printf("M             = %d\n", M);
-			if (M <= 0) {
+			if (M < 0) {
 				failed = true;
 				break;
 			}
@@ -198,34 +213,103 @@ int main(int nargs, char** args)
 	}
 	printf("\n");
 
+	// -------------------------------------------------------------------------
+	//  read data set, query set, and ground truth file
+	// -------------------------------------------------------------------------
+	if (alg == 0 || alg == 1 || alg == 3 || alg == 5 || alg == 7) {
+		data = new float*[n];
+		for (int i = 0; i < n; ++i) data[i] = new float[d];
+		if (read_data(n, d, data_set, data) == 1) return 1;
+
+		if (alg == 1 || alg == 3 || alg == 5 || alg == 7) {
+			write_data_new_form(n, d, B, (const float **) data, data_folder);
+		}
+	}
+
+	if (alg == 0 || alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
+		query = new float*[qn];
+		for (int i = 0; i < qn; ++i) query[i] = new float[d];
+		if (read_data(qn, d, query_set, query) == 1) return 1;
+	}
+
+	if (alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
+		R = new Result*[qn];
+		for (int i = 0; i < qn; ++i) R[i] = new Result[MAXK];
+		if (read_ground_truth(qn, truth_set, R) == 1) return 1;
+	}
+
+	// -------------------------------------------------------------------------
+	//  methods
+	// -------------------------------------------------------------------------
 	switch (alg) {
 	case 0:
-		ground_truth(n, qn, d, data_set, query_set, truth_set);
+		ground_truth(n, qn, d, (const float **) data, (const float **) query, 
+			truth_set);
 		break;
 	case 1:
 		indexing_of_rqalsh_star(n, d, B, L, M, beta, delta, ratio,
-			data_set, data_folder, output_folder);
+			(const float **) data, output_folder);
 		break;
 	case 2:
-		kfn_of_rqalsh_star(qn, d, L, M, query_set, truth_set, 
-			data_folder, output_folder);
+		kfn_of_rqalsh_star(qn, d, L, M, (const float **) query, 
+			(const Result **) R, data_folder, output_folder);
 		break;
 	case 3:
-		indexing_of_rqalsh(n, d, B, beta, delta, ratio, data_set, 
-			data_folder, output_folder);
+		indexing_of_rqalsh(n, d, B, beta, delta, ratio, (const float **) data, 
+			output_folder);
 		break;
 	case 4:
-		kfn_of_rqalsh(qn, d, query_set, truth_set, data_folder,
-			output_folder);
+		kfn_of_rqalsh(qn, d, (const float **) query, (const Result **) R, 
+			data_folder, output_folder);
 		break;
 	case 5:
-		linear_scan(n, qn, d, B, query_set, truth_set, data_folder, 
+		indexing_of_drusilla_select(n, d, B, L, M, (const float **) data, 
 			output_folder);
+		break;
+	case 6:
+		kfn_of_drusilla_select(qn, d, (const float **) query, (const Result **) R, 
+			data_folder, output_folder);
+		break;
+	case 7:
+		indexing_of_qdafn(n, d, B, L, M, ratio, (const float **) data, 
+			output_folder);
+		break;
+	case 8:
+		kfn_of_qdafn(qn, d, (const float **) query, (const Result **) R, 
+			data_folder, output_folder);
+		break;
+	case 9:
+		linear_scan(n, qn, d, B, (const float **) query, (const Result **) R, 
+			data_folder, output_folder);
 		break;
 	default:
 		printf("Parameters Error!\n");
 		usage();
 		break;
+	}
+
+	// -------------------------------------------------------------------------
+	//  release space
+	// -------------------------------------------------------------------------
+	if (alg == 0 || alg == 1 || alg == 3 || alg == 5 || alg == 7) {
+		for (int i = 0; i < n; ++i) {
+			delete[] data[i]; data[i] = NULL;
+		}
+		delete[] data; data  = NULL;
+	}
+
+	if (alg == 0 || alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
+		for (int i = 0; i < qn; ++i) {
+			delete[] query[i]; query[i] = NULL;
+		}
+		delete[] query; query = NULL;
+	}
+
+	if (alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
+		for (int i = 0; i < qn; ++i) {
+			delete[] R[i]; R[i] = NULL;
+		}
+		delete[] R; R = NULL;
 	}
 
 	return 0;

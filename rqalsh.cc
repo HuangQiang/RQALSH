@@ -39,37 +39,25 @@ RQALSH::RQALSH()					// constructor
 // -----------------------------------------------------------------------------
 RQALSH::~RQALSH()					// destructor
 {
-	if (a_array_ != NULL) {
-		delete[] a_array_; a_array_ = NULL;
-	}
-	if (trees_ != NULL) {
-		for (int i = 0; i < m_; ++i) {
-			delete trees_[i]; trees_[i] = NULL;
+	delete[] a_array_; a_array_ = NULL;
+	delete[] freq_;    freq_    = NULL;
+	delete[] checked_; checked_ = NULL;
+	delete[] flag_;    flag_    = NULL;
+	delete[] data_;    data_    = NULL;
+	delete[] q_val_;   q_val_   = NULL;
+	
+	for (int i = 0; i < m_; ++i) {
+		delete trees_[i]; trees_[i] = NULL;
+		if (lptr_[i] != NULL) {
+			delete[] lptr_[i]; lptr_[i] = NULL;
 		}
-		delete[] trees_; trees_ = NULL;
+		if (rptr_ != NULL) {
+			delete[] rptr_[i]; rptr_[i] = NULL;
+		}
 	}
-
-	if (freq_ != NULL) {
-		delete[] freq_; freq_ = NULL;
-	}
-	if (checked_ != NULL) {
-		delete[] checked_; checked_ = NULL;
-	}
-	if (flag_ != NULL) {
-		delete[] flag_; flag_ = NULL;
-	}
-	if (data_ != NULL) {
-		delete[] data_; data_ = NULL;
-	}
-	if (q_val_ != NULL) {
-		delete[] q_val_; q_val_ = NULL;
-	}
-	if (lptr_ != NULL) {
-		delete[] lptr_; lptr_ = NULL;
-	}
-	if (rptr_ != NULL) {
-		delete[] rptr_; rptr_ = NULL;
-	}
+	delete[] trees_; trees_ = NULL;
+	delete[] lptr_;  lptr_  = NULL;
+	delete[] rptr_;  rptr_  = NULL;
 }
 
 // -----------------------------------------------------------------------------
@@ -80,8 +68,8 @@ int RQALSH::build(					// build index
 	int   beta,							// false positive percentage
 	float delta,						// error probability
 	float ratio,						// approximation ratio
-	const char *index_path,				// index path
-	const float **data)					// data objects
+	const float **data,					// data objects
+	const char *index_path)				// index path
 {
 	// -------------------------------------------------------------------------
 	//  init parameters
@@ -106,7 +94,6 @@ int RQALSH::build(					// build index
 	//  bulkloading
 	// -------------------------------------------------------------------------
 	bulkload(data);
-	// display();
 
 	return 0;
 }
@@ -140,12 +127,17 @@ void RQALSH::calc_params()			// calc params of rqalsh
 	flag_    = new bool[m_];
 	data_    = new float[dim_];
 	q_val_   = new float[m_];
-	lptr_    = new PageBuffer[m_];
-	rptr_    = new PageBuffer[m_];
+	
+	lptr_    = new PageBuffer*[m_];
+	rptr_    = new PageBuffer*[m_];
+	for (int i = 0; i < m_; ++i) {
+		lptr_[i] = new PageBuffer();
+		rptr_[i] = new PageBuffer();
+	}
 }
 
 // -----------------------------------------------------------------------------
-float RQALSH::calc_l2_prob(			// calc prob <p1_> and <p2_> of L2 dist
+inline float RQALSH::calc_l2_prob(	// calc prob <p1_> and <p2_> of L2 dist
 	float x)							// x = w / (2.0 * r)
 {
 	return 1.0f - new_gaussian_prob(x);
@@ -155,19 +147,19 @@ float RQALSH::calc_l2_prob(			// calc prob <p1_> and <p2_> of L2 dist
 void RQALSH::display()				// display parameters
 {
 	printf("Parameters of RQALSH:\n");
-	printf("    n          = %d\n", n_pts_);
-	printf("    d          = %d\n", dim_);
-	printf("    B          = %d\n", B_);
-	printf("    ratio      = %f\n", appr_ratio_);
-	printf("    w          = %f\n", w_);
-	printf("    p1         = %f\n", p1_);
-	printf("    p2         = %f\n", p2_);
-	printf("    alpha      = %f\n", alpha_);
-	printf("    beta       = %f\n", beta_);
-	printf("    delta      = %f\n", delta_);
-	printf("    m          = %d\n", m_);
-	printf("    l          = %d\n", l_);
-	printf("\n");
+	printf("    n     = %d\n",   n_pts_);
+	printf("    d     = %d\n",   dim_);
+	printf("    B     = %d\n",   B_);
+	printf("    ratio = %.1f\n", appr_ratio_);
+	printf("    w     = %f\n",   w_);
+	printf("    p1    = %f\n",   p1_);
+	printf("    p2    = %f\n",   p2_);
+	printf("    alpha = %f\n",   alpha_);
+	printf("    beta  = %f\n",   beta_);
+	printf("    delta = %f\n",   delta_);
+	printf("    m     = %d\n",   m_);
+	printf("    l     = %d\n",   l_);
+	printf("    path  = %s\n\n", index_path_);
 }
 
 // -----------------------------------------------------------------------------
@@ -193,26 +185,23 @@ int RQALSH::bulkload(				// build m b-trees by bulkloading
 	//  write hash tables (indexed by B+ Tree) to disk
 	// -------------------------------------------------------------------------
 	char fname[200];
+
+	trees_ = new QAB_Tree*[m_];
 	Result *table = new Result[n_pts_];
 	for (int i = 0; i < m_; ++i) {
 		for (int j = 0; j < n_pts_; ++j) {
 			table[j].id_  = j;
 			table[j].key_ = calc_hash_value(i, data[j]);
 		}
-
 		qsort(table, n_pts_, sizeof(Result), ResultComp);
 
-		BTree *bt = new BTree();
 		get_tree_filename(i, fname);
-		bt->init(B_, fname);
-		if (bt->bulkload(n_pts_, (const Result *) table)) return 1;
-
-		delete bt; bt = NULL;
+		trees_[i] = new QAB_Tree();
+		trees_[i]->init(B_, fname);
+		if (trees_[i]->bulkload(n_pts_, (const Result *) table)) {
+			return 1;
+		}
 	}
-
-	// -------------------------------------------------------------------------
-	//  release space
-	// -------------------------------------------------------------------------
 	delete[] table; table = NULL;
 
 	return 0;
@@ -227,13 +216,13 @@ int RQALSH::write_params()			// write parameters to disk
 
 	FILE *fp = fopen(fname, "r");
 	if (fp)	{
-		printf("Hash tables exist.\n");
+		printf("Hash Tables Already Exist\n\n");
 		exit(1);
 	}
 
 	fp = fopen(fname, "w");
 	if (!fp) {
-		printf("Could not create %s.\n", fname);
+		printf("Could not create %s\n", fname);
 		printf("Perhaps no such folder %s?\n", index_path_);
 		return 1;
 	}
@@ -264,19 +253,20 @@ int RQALSH::write_params()			// write parameters to disk
 }
 
 // -----------------------------------------------------------------------------
-float RQALSH::calc_hash_value(		// calc hash value
-	int table_id,						// hash table id
+inline float RQALSH::calc_hash_value( // calc hash value
+	int tid,							// hash table id
 	const float *point)					// one data object
 {
-	float ret = 0.0f;
+	float ret  = 0.0f;
+	int   base = tid * dim_;
 	for (int i = 0; i < dim_; ++i) {
-		ret += (a_array_[table_id * dim_ + i] * point[i]);
+		ret += a_array_[base + i] * point[i];
 	}
 	return ret;
 }
 
 // -----------------------------------------------------------------------------
-void RQALSH::get_tree_filename(		// get file name of b-tree
+inline void RQALSH::get_tree_filename( // get file name of b-tree
 	int tree_id,						// tree id, from 0 to m-1
 	char *fname)						// file name (return)
 {
@@ -291,14 +281,13 @@ int RQALSH::load(					// load index
 	if (read_params()) return 1;
 
 	char fname[200];
-	trees_ = new BTree*[m_];
+	trees_ = new QAB_Tree*[m_];
 	for (int i = 0; i < m_; ++i) {
 		get_tree_filename(i, fname);
 
-		trees_[i] = new BTree();
+		trees_[i] = new QAB_Tree();
 		trees_[i]->init_restore(fname);
 	}
-
 	return 0;
 }
 
@@ -343,19 +332,27 @@ int RQALSH::read_params()			// read parameters from disk
 	flag_    = new bool[m_];
 	data_    = new float[dim_];
 	q_val_   = new float[m_];
-	lptr_    = new PageBuffer[m_];
-	rptr_    = new PageBuffer[m_];
+	
+	lptr_    = new PageBuffer*[m_];
+	rptr_    = new PageBuffer*[m_];
+	for (int i = 0; i < m_; ++i) {
+		lptr_[i] = new PageBuffer();
+		rptr_[i] = new PageBuffer();
+	}
 
 	return 0;
 }
 
 // -----------------------------------------------------------------------------
-int RQALSH::kfn(					// c-k-AFN search
+long long RQALSH::kfn(				// c-k-AFN search
 	int top_k,							// top-k value
 	const float *query,					// query object
 	const char *data_folder,			// data folder
 	MaxK_List *list)					// k-NN results (return)
 {
+	int candidates = CANDIDATES + top_k - 1; // threshold of candidates
+	float kdist = MINREAL;			// k-th furthest neighbor distance
+
 	// -------------------------------------------------------------------------
 	//  initialize parameters for k-NN search
 	// -------------------------------------------------------------------------
@@ -364,27 +361,15 @@ int RQALSH::kfn(					// c-k-AFN search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	int   candidates = CANDIDATES + top_k - 1; // threshold of candidates
-	int   num_flag   = -1;			// used for bucket width
-	int   id         = -1;			// data object id
-	int   count      = -1;			// count size in one page
-	int   start      = -1;			// start position
-	int   end        = -1;			// end position
-
-	float dist       = -1.0f;		// real distance between data and query
-	float ldist      = -1.0f;		// left distance with query
-	float rdist      = -1.0f;		// right distance with query
-	float kfn_dist   = MINREAL;		// k-th furthest neighbor distance
-
-	float radius     = find_radius(q_val_, lptr_, rptr_);
-	float bucket     = w_ * radius / 2.0f;
+	float radius = find_radius();
+	float bucket = w_ * radius / 2.0f;
 
 	while (true) {
 		// ---------------------------------------------------------------------
 		//  step 1: initialize the stop condition for current round
 		// ---------------------------------------------------------------------
-		num_flag = 0;
-		for (int i = 0; i < m_; ++i) flag_[i] = true;
+		int num_flag = 0;
+		memset(flag_, true, m_ * SIZEBOOL);
 
 		// ---------------------------------------------------------------------
 		//  step 2: find frequent objects (dynamic separation counting)
@@ -393,14 +378,18 @@ int RQALSH::kfn(					// c-k-AFN search
 			for (int i = 0; i < m_; ++i) {
 				if (!flag_[i]) continue;
 
+				PageBuffer *lptr = lptr_[i];
+				PageBuffer *rptr = rptr_[i];
+
 				// -------------------------------------------------------------
 				//  step 2.1: compute <ldist> and <rdist>
 				// -------------------------------------------------------------
-				ldist = -1.0f;
-				if (lptr_[i].size_ != -1) ldist = calc_dist(q_val_[i], &lptr_[i]);
+				float dist  = -1.0f;
+				float ldist = -1.0f;
+				float rdist = -1.0f;
 
-				rdist = -1.0f;
-				if (rptr_[i].size_ != -1) rdist = calc_dist(q_val_[i], &rptr_[i]);
+				if (lptr->size_ != -1) ldist = calc_dist(q_val_[i], lptr);
+				if (rptr->size_ != -1) rdist = calc_dist(q_val_[i], rptr);
 
 				// -------------------------------------------------------------
 				//  step 2.2: determine the closer direction (left or right)
@@ -410,44 +399,44 @@ int RQALSH::kfn(					// c-k-AFN search
 				//  query, and update the c-k-AFN results.
 				// -------------------------------------------------------------
 				if (ldist > bucket && ldist > rdist) {
-					count = lptr_[i].size_;
-					start = lptr_[i].leaf_pos_;
-					end   = start + count;
+					int count = lptr->size_;
+					int start = lptr->leaf_pos_;
+					int end   = start + count;
+					
 					for (int j = start; j < end; ++j) {
-						id = lptr_[i].leaf_node_->get_entry_id(j);
+						int id = lptr->leaf_node_->get_entry_id(j);
 						if (++freq_[id] > l_ && !checked_[id]) {
 							checked_[id] = true;
 							read_data_new_format(id, dim_, B_, data_folder, data_);
 
 							dist = calc_l2_dist(dim_, (const float*) data_, query);
-							kfn_dist = list->insert(dist, id + 1);
-
+							kdist = list->insert(dist, id + 1);
 							if (++dist_io_ >= candidates) break;
 						}
 					}
-					update_left_buffer(&rptr_[i], &lptr_[i]);
+					update_left_buffer(rptr, lptr);
 				}
 				else if (rdist > bucket && ldist <= rdist) {
-					count = rptr_[i].size_;
-					end   = rptr_[i].leaf_pos_;
-					start = end - count;
+					int count = rptr->size_;
+					int end   = rptr->leaf_pos_;
+					int start = end - count;
+
 					for (int j = end; j > start; --j) {
-						id = rptr_[i].leaf_node_->get_entry_id(j);
+						int id = rptr->leaf_node_->get_entry_id(j);
 						if (++freq_[id] > l_ && !checked_[id]) {
 							checked_[id] = true;
 							read_data_new_format(id, dim_, B_, data_folder, data_);
 
 							dist = calc_l2_dist(dim_, (const float*) data_, query);
-							kfn_dist = list->insert(dist, id + 1);
-
+							kdist = list->insert(dist, id + 1);
 							if (++dist_io_ >= candidates) break;
 						}
 					}
-					update_right_buffer(&lptr_[i], &rptr_[i]);
+					update_right_buffer(lptr, rptr);
 				}
 				else {
 					flag_[i] = false;
-					num_flag++;
+					++num_flag;
 				}
 				if (num_flag >= m_ || dist_io_ >= candidates) break;
 			}
@@ -456,7 +445,7 @@ int RQALSH::kfn(					// c-k-AFN search
 		// ---------------------------------------------------------------------
 		//  step 3: stop conditions 1 & 2
 		// ---------------------------------------------------------------------
-		if (kfn_dist > radius / appr_ratio_ && dist_io_ >= top_k) break;
+		if (kdist > radius / appr_ratio_ && dist_io_ >= top_k) break;
 		if (dist_io_ >= candidates) break;
 
 		// ---------------------------------------------------------------------
@@ -467,17 +456,20 @@ int RQALSH::kfn(					// c-k-AFN search
 	}
 	delete_tree_ptr();	
 
-	return page_io_ + dist_io_;
+	return (long long) (page_io_ + dist_io_);
 }
 
 // -----------------------------------------------------------------------------
-int RQALSH::kfn(					// c-k-AFN search
+long long RQALSH::kfn(				// c-k-AFN search
 	int top_k,							// top-k value
 	const float *query,					// query object
 	const int *object_id,				// object id mapping
 	const char *data_folder,			// data folder
 	MaxK_List *list)					// k-FN results (return)
 {
+	int candidates = CANDIDATES + top_k - 1; // candidates size
+	float kdist = MINREAL;			// k-th furthest neighbor distance
+
 	// -------------------------------------------------------------------------
 	//  initialize parameters for k-NN search
 	// -------------------------------------------------------------------------
@@ -486,28 +478,15 @@ int RQALSH::kfn(					// c-k-AFN search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	int   candidates = CANDIDATES + top_k - 1; // threshold of candidates
-	int   num_flag   = -1;			// used for bucket width
-	int   id         = -1;			// current object id
-	int   oid        = -1;			// read data object id
-	int   count      = -1;			// count size in one page
-	int   start      = -1;			// start position
-	int   end        = -1;			// end position
-
-	float dist       = -1.0f;		// real distance between data and query
-	float ldist      = -1.0f;		// left distance with query
-	float rdist      = -1.0f;		// right distance with query
-	float kfn_dist   = MINREAL;		// k-th furthest neighbor distance
-
-	float radius     = find_radius(q_val_, lptr_, rptr_);
-	float bucket     = w_ * radius / 2.0f;
+	float radius = find_radius();
+	float bucket = w_ * radius / 2.0f;
 
 	while (true) {
 		// ---------------------------------------------------------------------
 		//  step 1: initialize the stop condition for current round
 		// ---------------------------------------------------------------------
-		num_flag = 0;
-		for (int i = 0; i < m_; ++i) flag_[i] = true;
+		int num_flag = 0;
+		memset(flag_, true, m_ * SIZEBOOL);
 
 		// ---------------------------------------------------------------------
 		//  step 2: find frequent objects (dynamic separation counting)
@@ -516,14 +495,18 @@ int RQALSH::kfn(					// c-k-AFN search
 			for (int i = 0; i < m_; ++i) {
 				if (!flag_[i]) continue;
 
+				PageBuffer *lptr = lptr_[i];
+				PageBuffer *rptr = rptr_[i];
+
 				// -------------------------------------------------------------
 				//  step 2.1: compute <ldist> and <rdist>
 				// -------------------------------------------------------------
-				ldist = -1.0f;
-				if (lptr_[i].size_ != -1) ldist = calc_dist(q_val_[i], &lptr_[i]);
+				float dist  = -1.0f;
+				float ldist = -1.0f;
+				float rdist = -1.0f;
 
-				rdist = -1.0f;
-				if (rptr_[i].size_ != -1) rdist = calc_dist(q_val_[i], &rptr_[i]);
+				if (lptr->size_ != -1) ldist = calc_dist(q_val_[i], lptr);
+				if (rptr->size_ != -1) rdist = calc_dist(q_val_[i], rptr);
 
 				// -------------------------------------------------------------
 				//  step 2.2: determine the closer direction (left or right)
@@ -533,48 +516,48 @@ int RQALSH::kfn(					// c-k-AFN search
 				//  query, and update the c-k-AFN results.
 				// -------------------------------------------------------------
 				if (ldist > bucket && ldist > rdist) {
-					count = lptr_[i].size_;
-					start = lptr_[i].leaf_pos_;
-					end   = start + count;
+					int count = lptr->size_;
+					int start = lptr->leaf_pos_;
+					int end   = start + count;
+
 					for (int j = start; j < end; ++j) {
-						id = lptr_[i].leaf_node_->get_entry_id(j);
+						int id = lptr->leaf_node_->get_entry_id(j);
 						if (++freq_[id] > l_ && !checked_[id]) {
 							checked_[id] = true;
-							oid = object_id[id];
-							assert(oid >= 0 && oid < 59000);
+							int oid = object_id[id];
+							// assert(oid >= 0 && oid < 59000);
 							read_data_new_format(oid, dim_, B_, data_folder, data_);
 
 							dist = calc_l2_dist(dim_, (const float*) data_, query);
-							kfn_dist = list->insert(dist, oid + 1);
-
+							kdist = list->insert(dist, oid + 1);
 							if (++dist_io_ >= candidates) break;
 						}
 					}
-					update_left_buffer(&rptr_[i], &lptr_[i]);
+					update_left_buffer(rptr, lptr);
 				}
 				else if (rdist > bucket && ldist <= rdist) {
-					count = rptr_[i].size_;
-					end   = rptr_[i].leaf_pos_;
-					start = end - count;
+					int count = rptr->size_;
+					int end   = rptr->leaf_pos_;
+					int start = end - count;
+
 					for (int j = end; j > start; --j) {
-						id = rptr_[i].leaf_node_->get_entry_id(j);
+						int id = rptr->leaf_node_->get_entry_id(j);
 						if (++freq_[id] > l_ && !checked_[id]) {
 							checked_[id] = true;
-							oid = object_id[id];
-							assert(oid >= 0 && oid < 59000);
+							int oid = object_id[id];
+							// assert(oid >= 0 && oid < 59000);
 							read_data_new_format(oid, dim_, B_, data_folder, data_);
 
 							dist = calc_l2_dist(dim_, (const float*) data_, query);
-							kfn_dist = list->insert(dist, oid + 1);
-
+							kdist = list->insert(dist, oid + 1);
 							if (++dist_io_ >= candidates) break;
 						}
 					}
-					update_right_buffer(&lptr_[i], &rptr_[i]);
+					update_right_buffer(lptr, rptr);
 				}
 				else {
 					flag_[i] = false;
-					num_flag++;
+					++num_flag;
 				}
 				if (num_flag >= m_ || dist_io_ >= candidates) break;
 			}
@@ -583,7 +566,7 @@ int RQALSH::kfn(					// c-k-AFN search
 		// ---------------------------------------------------------------------
 		//  step 3: stop conditions 1 & 2
 		// ---------------------------------------------------------------------
-		if (kfn_dist > radius / appr_ratio_ && dist_io_ >= top_k) break;
+		if (kdist > radius / appr_ratio_ && dist_io_ >= top_k) break;
 		if (dist_io_ >= candidates) break;
 
 		// ---------------------------------------------------------------------
@@ -603,28 +586,23 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 {
 	page_io_ = 0;
 	dist_io_ = 0;
-
-	for (int i = 0; i < n_pts_; ++i) {
-		freq_[i]    = 0;
-		checked_[i] = false;
-	}
+	memset(freq_, 0, n_pts_ * SIZEFLOAT);
+	memset(checked_, false, n_pts_ * SIZEBOOL);
 
 	for (int i = 0; i < m_; ++i) {
-		q_val_[i] = calc_hash_value(i, query);
+		lptr_[i]->leaf_node_ = NULL;
+		lptr_[i]->index_pos_ = -1;
+		lptr_[i]->leaf_pos_  = -1;
+		lptr_[i]->size_      = -1;
 
-		lptr_[i].leaf_node_ = NULL;
-		lptr_[i].index_pos_ = -1;
-		lptr_[i].leaf_pos_  = -1;
-		lptr_[i].size_      = -1;
-
-		rptr_[i].leaf_node_ = NULL;
-		rptr_[i].index_pos_ = -1;
-		rptr_[i].leaf_pos_  = -1;
-		rptr_[i].size_      = -1;
+		rptr_[i]->leaf_node_ = NULL;
+		rptr_[i]->index_pos_ = -1;
+		rptr_[i]->leaf_pos_  = -1;
+		rptr_[i]->size_      = -1;
 	}
 
-	BIndexNode *index_node = NULL;
-	BLeafNode  *leaf_node = NULL;
+	QAB_IndexNode *index_node = NULL;
+	QAB_LeafNode  *leaf_node  = NULL;
 
 	int block       = -1;			// variables for index node
 	int pos         = -1;			// variables for leaf node
@@ -633,38 +611,44 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 	int num_keys    = -1;
 
 	for (int i = 0; i < m_; ++i) {
-		block = trees_[i]->root_;
+		float q_val = calc_hash_value(i, query);
+		QAB_Tree   *tree = trees_[i];
+		PageBuffer *lptr = lptr_[i];
+		PageBuffer *rptr = rptr_[i];
+
+		q_val_[i] = q_val;
+		block = tree->root_;
 		if (block == 1) {
 			// -----------------------------------------------------------------
 			//  the b-tree has only one leaf node
 			// -----------------------------------------------------------------
-			lptr_[i].leaf_node_ = new BLeafNode();
-			lptr_[i].leaf_node_->init_restore(trees_[i], block);
-			page_io_++;
+			lptr->leaf_node_ = new QAB_LeafNode();
+			lptr->leaf_node_->init_restore(trees_[i], block);
+			++page_io_;
 
-			leaf_node   = lptr_[i].leaf_node_;
+			leaf_node   = lptr->leaf_node_;
 			num_keys    = leaf_node->get_num_keys();
 			increment   = leaf_node->get_increment();
 			num_entries = leaf_node->get_num_entries();
 			if (num_keys > 1) {
-				lptr_[i].index_pos_ = 0;
-				lptr_[i].leaf_pos_  = 0;
-				lptr_[i].size_      = increment;
+				lptr->index_pos_ = 0;
+				lptr->leaf_pos_  = 0;
+				lptr->size_      = increment;
 
-				rptr_[i].leaf_node_ = lptr_[i].leaf_node_;
-				rptr_[i].index_pos_ = num_keys - 1;
-				rptr_[i].leaf_pos_  = num_entries - 1;
-				rptr_[i].size_      = num_entries - (num_keys - 1) * increment;
+				rptr->leaf_node_ = lptr->leaf_node_;
+				rptr->index_pos_ = num_keys - 1;
+				rptr->leaf_pos_  = num_entries - 1;
+				rptr->size_      = num_entries - (num_keys - 1) * increment;
 			}
 			else {
-				lptr_[i].index_pos_ = 0;
-				lptr_[i].leaf_pos_  = 0;
-				lptr_[i].size_      = num_entries;
+				lptr->index_pos_ = 0;
+				lptr->leaf_pos_  = 0;
+				lptr->size_      = num_entries;
 
-				rptr_[i].leaf_node_ = NULL;
-				rptr_[i].index_pos_ = -1;
-				rptr_[i].leaf_pos_  = -1;
-				rptr_[i].size_      = -1;
+				rptr->leaf_node_ = NULL;
+				rptr->index_pos_ = -1;
+				rptr->leaf_pos_  = -1;
+				rptr->size_      = -1;
 			}
 		}
 		else {
@@ -675,34 +659,34 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 			// -----------------------------------------------------------------
 			//  (1) initialize left leaf node
 			// -----------------------------------------------------------------
-			block = trees_[i]->root_;
-			index_node = new BIndexNode();
-			index_node->init_restore(trees_[i], block);
-			page_io_++;
+			block = tree->root_;
+			index_node = new QAB_IndexNode();
+			index_node->init_restore(tree, block);
+			++page_io_;
 									// find the left most leaf node
 			while (index_node->get_level() > 1) {
 				block = index_node->get_son(0);
 				delete index_node; index_node = NULL;
 
-				index_node = new BIndexNode();
-				index_node->init_restore(trees_[i], block);
-				page_io_++;			// access a new node (a new page)
+				index_node = new QAB_IndexNode();
+				index_node->init_restore(tree, block);
+				++page_io_;			// access a new node (a new page)
 			}
 
 			block = index_node->get_son(0);
-			lptr_[i].leaf_node_ = new BLeafNode();
-			lptr_[i].leaf_node_->init_restore(trees_[i], block);
-			page_io_++;
+			lptr->leaf_node_ = new QAB_LeafNode();
+			lptr->leaf_node_->init_restore(tree, block);
+			++page_io_;
 
-			lptr_[i].index_pos_ = 0;
-			lptr_[i].leaf_pos_  = 0;
+			lptr->index_pos_ = 0;
+			lptr->leaf_pos_  = 0;
 
-			increment   = lptr_[i].leaf_node_->get_increment();
-			num_entries = lptr_[i].leaf_node_->get_num_entries();
+			increment   = lptr->leaf_node_->get_increment();
+			num_entries = lptr->leaf_node_->get_num_entries();
 			if (increment > num_entries) {
-				lptr_[i].size_ = num_entries;
+				lptr->size_ = num_entries;
 			} else {
-				lptr_[i].size_ = increment;
+				lptr->size_ = increment;
 			}
 
 			if (index_node != NULL) {
@@ -712,35 +696,35 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 			// -----------------------------------------------------------------
 			//  Initialize right leaf node
 			// -----------------------------------------------------------------
-			block = trees_[i]->root_;
-			index_node = new BIndexNode();
-			index_node->init_restore(trees_[i], block);
-			page_io_++;
+			block = tree->root_;
+			index_node = new QAB_IndexNode();
+			index_node->init_restore(tree, block);
+			++page_io_;
 									// find the right most leaf node
 			while (index_node->get_level() > 1) {
 				num_entries = index_node->get_num_entries();
 				block = index_node->get_son(num_entries - 1);
 				delete index_node; index_node = NULL;
 
-				index_node = new BIndexNode();
-				index_node->init_restore(trees_[i], block);
-				page_io_++;			// access a new node (a new page)
+				index_node = new QAB_IndexNode();
+				index_node->init_restore(tree, block);
+				++page_io_;			// access a new node (a new page)
 			}
 
 			num_entries = index_node->get_num_entries();
 			block = index_node->get_son(num_entries - 1);
-			rptr_[i].leaf_node_ = new BLeafNode();
-			rptr_[i].leaf_node_->init_restore(trees_[i], block);
-			page_io_++;
+			rptr->leaf_node_ = new QAB_LeafNode();
+			rptr->leaf_node_->init_restore(tree, block);
+			++page_io_;
 
-			leaf_node   = rptr_[i].leaf_node_;
+			leaf_node   = rptr->leaf_node_;
 			num_keys    = leaf_node->get_num_keys();
 			increment   = leaf_node->get_increment();
 			num_entries = leaf_node->get_num_entries();
 
-			rptr_[i].index_pos_ = num_keys - 1;
-			rptr_[i].leaf_pos_  = num_entries - 1;
-			rptr_[i].size_      = num_entries - (num_keys - 1) * increment;
+			rptr->index_pos_ = num_keys - 1;
+			rptr->leaf_pos_  = num_entries - 1;
+			rptr->size_      = num_entries - (num_keys - 1) * increment;
 
 			if (index_node != NULL) {
 				delete index_node; index_node = NULL;
@@ -750,10 +734,7 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 }
 
 // -----------------------------------------------------------------------------
-float RQALSH::find_radius(			// find proper radius
-	const float *q_val,					// hash value of query
-	const PageBuffer *lptr,				// left page buffer
-	const PageBuffer *rptr)				// right page buffer
+float RQALSH::find_radius()			// find proper radius
 {
 	// -------------------------------------------------------------------------
 	//  find an array of projected distance which is closest to the query in
@@ -761,11 +742,11 @@ float RQALSH::find_radius(			// find proper radius
 	// -------------------------------------------------------------------------
 	vector<float> list;
 	for (int i = 0; i < m_; ++i) {
-		if (lptr[i].size_ != -1) {
-			list.push_back(calc_dist(q_val[i], &lptr[i]));
+		if (lptr_[i]->size_ != -1) {
+			list.push_back(calc_dist(q_val_[i], lptr_[i]));
 		}
-		if (rptr[i].size_ != -1) {
-			list.push_back(calc_dist(q_val[i], &rptr[i]));
+		if (rptr_[i]->size_ != -1) {
+			list.push_back(calc_dist(q_val_[i], rptr_[i]));
 		}
 	}
 
@@ -791,8 +772,8 @@ void RQALSH::update_left_buffer(	// update left buffer
 	const PageBuffer *rptr,				// right buffer
 	PageBuffer *lptr)					// left buffer (return)
 {
-	BLeafNode* leaf_node     = NULL;
-	BLeafNode* old_leaf_node = NULL;
+	QAB_LeafNode* leaf_node     = NULL;
+	QAB_LeafNode* old_leaf_node = NULL;
 
 	if (lptr->index_pos_ < lptr->leaf_node_->get_num_keys() - 1) {
 		lptr->index_pos_++;
@@ -823,7 +804,7 @@ void RQALSH::update_left_buffer(	// update left buffer
 			} else {
 				lptr->size_ = increment;
 			}
-			page_io_++;
+			++page_io_;
 		}
 		else {
 			lptr->leaf_node_ = NULL;
@@ -843,8 +824,8 @@ void RQALSH::update_right_buffer(	// update right buffer
 	const PageBuffer* lptr,				// left buffer
 	PageBuffer* rptr)					// right buffer (return)
 {
-	BLeafNode* leaf_node     = NULL;
-	BLeafNode* old_leaf_node = NULL;
+	QAB_LeafNode* leaf_node     = NULL;
+	QAB_LeafNode* old_leaf_node = NULL;
 
 	if (rptr->index_pos_ > 0) {
 		rptr->index_pos_--;
@@ -867,7 +848,7 @@ void RQALSH::update_right_buffer(	// update right buffer
 			int num_entries  = leaf_node->get_num_entries();
 			rptr->leaf_pos_  = num_entries - 1;
 			rptr->size_      = num_entries - pos * increment;
-			page_io_++;
+			++page_io_;
 		}
 		else {
 			rptr->leaf_node_ = NULL;
@@ -883,7 +864,7 @@ void RQALSH::update_right_buffer(	// update right buffer
 }
 
 // -----------------------------------------------------------------------------
-float RQALSH::calc_dist(			// calc projected distance
+inline float RQALSH::calc_dist(		// calc projected distance
 	float q_val,						// hash value of query
 	const PageBuffer *ptr)				// page buffer
 {
@@ -905,11 +886,11 @@ void RQALSH::delete_tree_ptr()		// delete the pointers of B+ Trees
 		//  to the same address, then we would delete it twice and receive 
 		//  the runtime error or segmentation fault.
 		// ---------------------------------------------------------------------
-		if (lptr_[i].leaf_node_ && lptr_[i].leaf_node_ != rptr_[i].leaf_node_) {
-			delete lptr_[i].leaf_node_; lptr_[i].leaf_node_ = NULL;
+		if (lptr_[i]->leaf_node_ && lptr_[i]->leaf_node_ != rptr_[i]->leaf_node_) {
+			delete lptr_[i]->leaf_node_; lptr_[i]->leaf_node_ = NULL;
 		}
-		if (rptr_[i].leaf_node_) {
-			delete rptr_[i].leaf_node_; rptr_[i].leaf_node_ = NULL;
+		if (rptr_[i]->leaf_node_) {
+			delete rptr_[i]->leaf_node_; rptr_[i]->leaf_node_ = NULL;
 		}
 	}
 }

@@ -2,16 +2,18 @@
 #define __AFN_H
 
 // -----------------------------------------------------------------------------
-int ground_truth(					// find ground truth
+int linear_scan(					// brute-force linear scan (data in disk)
 	int   n,							// number of data objects
 	int   qn,							// number of query objects
 	int   d,							// dimensionality
-	const char *data_set,				// address of data  set
-	const char *query_set,				// address of query set
-	const char *truth_set);				// address of truth set
+	int   B,							// page size
+	const float **query,				// query set
+	const Result **R,					// truth set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
 
 // -----------------------------------------------------------------------------
-int indexing_of_rqalsh_star(		// indexing of RQALSH_Star
+int indexing_of_rqalsh_star(		// indexing of RQALSH*
 	int   n,							// number of data objects
 	int   d,							// dimensionality
 	int   B,							// page size
@@ -20,18 +22,17 @@ int indexing_of_rqalsh_star(		// indexing of RQALSH_Star
 	int   beta,							// false positive percentage
 	float delta,						// error probability
 	float ratio,						// approximation ratio
-	const char *data_set,				// address of data set
-	const char *data_folder,			// data folder
+	const float **data,					// data set
 	const char *output_folder);			// output folder
 
 // -----------------------------------------------------------------------------
-int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH_Star
+int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH*
 	int   qn,							// number of query objects
 	int   d,							// dimensionality
 	int   L,							// number of projection
 	int   M,							// number of candidates
-	const char *query_set,				// address of query set
-	const char *truth_set,				// address of truth set
+	const float **query,				// query set
+	const Result **R,					// truth set
 	const char *data_folder,			// data folder
 	const char *output_folder);			// output folder
 
@@ -43,27 +44,54 @@ int indexing_of_rqalsh(				// indexing of RQALSH
 	int   beta,							// false positive percentage
 	float delta,						// error probability
 	float ratio,						// approximation ratio
-	const char *data_set,				// address of data set
-	const char *data_folder,			// data folder
+	const float **data,					// data set
 	const char *output_folder);			// output folder
 
 // -----------------------------------------------------------------------------
 int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
 	int   qn,							// number of query objects
 	int   d,							// dimensionality
-	const char *query_set,				// address of query set
-	const char *truth_set,				// address of truth set
+	const float **query,				// query set
+	const Result **R,					// truth set
 	const char *data_folder,			// data folder
 	const char *output_folder);			// output folder
 
 // -----------------------------------------------------------------------------
-int linear_scan(					// brute-force linear scan (data in disk)
+int indexing_of_drusilla_select(	// indexing of Drusilla_Select
 	int   n,							// number of data objects
-	int   qn,							// number of query objects
 	int   d,							// dimensionality
 	int   B,							// page size
-	const char *query_set,				// address of query set
-	const char *truth_set,				// address of truth set
+	int   L,							// number of projection
+	int   M,							// number of candidates
+	const float **data,					// data set
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int kfn_of_drusilla_select(			// c-k-AFN via Drusilla_Select
+	int   qn,							// number of query objects
+	int   d,							// dimensionality
+	const float **query,				// query set
+	const Result **R,					// truth set
+	const char *data_folder,			// data folder
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int indexing_of_qdafn(				// indexing of QDAFN
+	int   n,							// number of data points
+	int   d,							// dimension of space
+	int   B,							// page size
+	int   L,							// number of projections
+	int   M,							// number of candidates
+	float ratio,						// approximation ratio
+	const float **data,					// data set
+	const char *output_folder);			// output folder
+
+// -----------------------------------------------------------------------------
+int kfn_of_qdafn(					// c-k-AFN via QDAFN
+	int   qn,							// number of query points
+	int   d,							// dimensionality
+	const float **query,				// query set
+	const Result **R,					// truth set
 	const char *data_folder,			// data folder
 	const char *output_folder);			// output folder
 

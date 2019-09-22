@@ -19,13 +19,6 @@ MaxK_List::~MaxK_List() 			// destructor
 }
 
 // -----------------------------------------------------------------------------
-bool MaxK_List::isFull()			// is full?
-{
-	if (num_ >= k_) return true;
-	else return false;
-}
-
-// -----------------------------------------------------------------------------
 float MaxK_List::insert(			// insert item
 	float key,							// key of item
 	int id)								// id of item
@@ -37,7 +30,7 @@ float MaxK_List::insert(			// insert item
 	}
 	list_[i].key_ = key;				// store new item here
 	list_[i].id_ = id;
-	if (num_ < k_) num_++;			// increase the number of items
+	if (num_ < k_) ++num_;			// increase the number of items
 
 	return min_key();
 }

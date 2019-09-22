@@ -14,9 +14,9 @@ beta=100
 delta=0.49
 c=2.0
 
-dPath=./data/${dname}/${dname}
-dFolder=./data/${dname}/
-oFolder=./results${c}/${dname}/
+dPath=../../data/${dname}/${dname}
+dFolder=../../data/${dname}/
+oFolder=../../results${c}/${dname}/
 
 # ------------------------------------------------------------------------------
 #  Ground Truth 
