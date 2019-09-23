@@ -38,7 +38,7 @@ We use four real-life datasets [Sift](https://drive.google.com/open?id=1tgcUU9X6
 ## Run Experiments
 
 ```bash
-Usage: qalsh [OPTIONS]
+Usage: rqalsh [OPTIONS]
 
 This package supports 10 options to evaluate the performance of RQALSH, RQALSH*,
 QDAFN, QDAFN*, Drusilla_Select, and Linear_Scan for c-AFN search. The parameters
