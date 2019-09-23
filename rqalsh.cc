@@ -1,9 +1,8 @@
 #include "headers.h"
 
-
 // -----------------------------------------------------------------------------
-//  RQALSH: structure of rqalsh indexed by b+ tree. RQALSH is used to solve
-//  the problem of c-Approximate Furthest Neighbor (c-AFN) search.
+//  RQALSH: structure of rqalsh indexed by query-aware b+ tree. RQALSH is used 
+//  to solve the problem of c-Approximate Furthest Neighbor (c-AFN) search.
 // -----------------------------------------------------------------------------
 RQALSH::RQALSH()					// constructor
 {
@@ -69,7 +68,7 @@ int RQALSH::build(					// build index
 	float delta,						// error probability
 	float ratio,						// approximation ratio
 	const float **data,					// data objects
-	const char *index_path)				// index path
+	const char *path)					// index path
 {
 	// -------------------------------------------------------------------------
 	//  init parameters
@@ -81,8 +80,8 @@ int RQALSH::build(					// build index
 	delta_      = delta;
 	appr_ratio_ = ratio;
 
-	strcpy(index_path_, index_path);
-	create_dir(index_path_);
+	strcpy(path_, path);
+	create_dir(path_);
 
 	// -------------------------------------------------------------------------
 	//  calc parameters and generate hash functions
@@ -159,7 +158,7 @@ void RQALSH::display()				// display parameters
 	printf("    delta = %f\n",   delta_);
 	printf("    m     = %d\n",   m_);
 	printf("    l     = %d\n",   l_);
-	printf("    path  = %s\n\n", index_path_);
+	printf("    path  = %s\n\n", path_);
 }
 
 // -----------------------------------------------------------------------------
@@ -211,42 +210,37 @@ int RQALSH::bulkload(				// build m b-trees by bulkloading
 int RQALSH::write_params()			// write parameters to disk
 {
 	char fname[200];
-	strcpy(fname, index_path_);
+	strcpy(fname, path_);
 	strcat(fname, "para");
 
-	FILE *fp = fopen(fname, "r");
+	FILE *fp = fopen(fname, "rb");
 	if (fp)	{
 		printf("Hash Tables Already Exist\n\n");
-		exit(1);
-	}
-
-	fp = fopen(fname, "w");
-	if (!fp) {
-		printf("Could not create %s\n", fname);
-		printf("Perhaps no such folder %s?\n", index_path_);
 		return 1;
 	}
 
-	fprintf(fp, "n     = %d\n", n_pts_);
-	fprintf(fp, "d     = %d\n", dim_);
-	fprintf(fp, "B     = %d\n", B_);
-	fprintf(fp, "ratio = %f\n", appr_ratio_);
-	fprintf(fp, "w     = %f\n", w_);
-	fprintf(fp, "p1    = %f\n", p1_);
-	fprintf(fp, "p2    = %f\n", p2_);
-	fprintf(fp, "alpha = %f\n", alpha_);
-	fprintf(fp, "beta  = %f\n", beta_);
-	fprintf(fp, "delta = %f\n", delta_);
-	fprintf(fp, "m     = %d\n", m_);
-	fprintf(fp, "l     = %d\n", l_);
-
-	int count = 0;
-	for (int i = 0; i < m_; ++i) {
-		for (int j = 0; j < dim_; ++j) {
-			fprintf(fp, "%f ", a_array_[count++]);
-		}
-		fprintf(fp, "\n");
+	fp = fopen(fname, "wb");
+	if (!fp) {
+		printf("Could not create %s\n", fname);
+		printf("Perhaps no such folder %s?\n", path_);
+		return 1;
 	}
+
+	int size = m_ * dim_;
+
+	fwrite(&n_pts_,      SIZEINT,   1,    fp);
+	fwrite(&dim_,        SIZEINT,   1,    fp);
+	fwrite(&B_,          SIZEINT,   1,    fp);
+	fwrite(&m_,          SIZEINT,   1,    fp);
+	fwrite(&l_,          SIZEINT,   1,    fp);
+	fwrite(&appr_ratio_, SIZEFLOAT, 1,    fp);
+	fwrite(&w_,          SIZEFLOAT, 1,    fp);
+	fwrite(&p1_,         SIZEFLOAT, 1,    fp);
+	fwrite(&p2_,         SIZEFLOAT, 1,    fp);
+	fwrite(&alpha_,      SIZEFLOAT, 1,    fp);
+	fwrite(&beta_,       SIZEFLOAT, 1,    fp);
+	fwrite(&delta_,      SIZEFLOAT, 1,    fp);
+	fwrite(a_array_,     SIZEFLOAT, size, fp);
 	fclose(fp);	
 
 	return 0;
@@ -270,14 +264,14 @@ inline void RQALSH::get_tree_filename( // get file name of b-tree
 	int tree_id,						// tree id, from 0 to m-1
 	char *fname)						// file name (return)
 {
-	sprintf(fname, "%s%d.rqalsh", index_path_, tree_id);
+	sprintf(fname, "%s%d.rqalsh", path_, tree_id);
 }
 
 // -----------------------------------------------------------------------------
 int RQALSH::load(					// load index
-	const char *index_path)				// index path
+	const char *path)					// index path
 {
-	strcpy(index_path_, index_path);
+	strcpy(path_, path);
 	if (read_params()) return 1;
 
 	char fname[200];
@@ -295,36 +289,31 @@ int RQALSH::load(					// load index
 int RQALSH::read_params()			// read parameters from disk
 {
 	char fname[200];
-	strcpy(fname, index_path_);
+	strcpy(fname, path_);
 	strcat(fname, "para");
 
-	FILE *fp = fopen(fname, "r");
+	FILE *fp = fopen(fname, "rb");
 	if (!fp) {
-		printf("Could not open %s.\n", fname);
+		printf("Could not open %s\n", fname);
 		return 1;
 	}
 
-	fscanf(fp, "n     = %d\n", &n_pts_);
-	fscanf(fp, "d     = %d\n", &dim_);
-	fscanf(fp, "B     = %d\n", &B_);
-	fscanf(fp, "ratio = %f\n", &appr_ratio_);
-	fscanf(fp, "w     = %f\n", &w_);
-	fscanf(fp, "p1    = %f\n", &p1_);
-	fscanf(fp, "p2    = %f\n", &p2_);
-	fscanf(fp, "alpha = %f\n", &alpha_);
-	fscanf(fp, "beta  = %f\n", &beta_);
-	fscanf(fp, "delta = %f\n", &delta_);
-	fscanf(fp, "m     = %d\n", &m_);
-	fscanf(fp, "l     = %d\n", &l_);
+	fread(&n_pts_,      SIZEINT,   1, fp);
+	fread(&dim_,        SIZEINT,   1, fp);
+	fread(&B_,          SIZEINT,   1, fp);
+	fread(&m_,          SIZEINT,   1, fp);
+	fread(&l_,          SIZEINT,   1, fp);
+	fread(&appr_ratio_, SIZEFLOAT, 1, fp);
+	fread(&w_,          SIZEFLOAT, 1, fp);
+	fread(&p1_,         SIZEFLOAT, 1, fp);
+	fread(&p2_,         SIZEFLOAT, 1, fp);
+	fread(&alpha_,      SIZEFLOAT, 1, fp);
+	fread(&beta_,       SIZEFLOAT, 1, fp);
+	fread(&delta_,      SIZEFLOAT, 1, fp);
 	
-	a_array_ = new float[m_ * dim_];
-	int count = 0;
-	for (int i = 0; i < m_; ++i) {
-		for (int j = 0; j < dim_; ++j) {
-			fscanf(fp, "%f ", &a_array_[count++]);
-		}
-		fscanf(fp, "\n");
-	}
+	int size = m_ * dim_;
+	a_array_ = new float[size];
+	fread(a_array_, SIZEFLOAT, size, fp);
 	fclose(fp);
 
 	freq_    = new int[n_pts_];
@@ -654,9 +643,7 @@ void RQALSH::init_search_params(	// init parameters for k-FN search
 		else {
 			// -----------------------------------------------------------------
 			//  the b-tree has index node
-			// -----------------------------------------------------------------
-
-			// -----------------------------------------------------------------
+			// 
 			//  (1) initialize left leaf node
 			// -----------------------------------------------------------------
 			block = tree->root_;
@@ -886,7 +873,7 @@ void RQALSH::delete_tree_ptr()		// delete the pointers of B+ Trees
 		//  to the same address, then we would delete it twice and receive 
 		//  the runtime error or segmentation fault.
 		// ---------------------------------------------------------------------
-		if (lptr_[i]->leaf_node_ && lptr_[i]->leaf_node_ != rptr_[i]->leaf_node_) {
+		if (lptr_[i]->leaf_node_ && lptr_[i]->leaf_node_!=rptr_[i]->leaf_node_) {
 			delete lptr_[i]->leaf_node_; lptr_[i]->leaf_node_ = NULL;
 		}
 		if (rptr_[i]->leaf_node_) {

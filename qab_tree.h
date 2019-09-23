@@ -11,7 +11,7 @@ struct Result;
 class QAB_Tree {
 public:
 	int root_;						// address of disk for root
-	QAB_Node *root_ptr_;				// pointer of root
+	QAB_Node *root_ptr_;			// pointer of root
 	BlockFile *file_;				// file in disk to store
 	
 	// -------------------------------------------------------------------------
@@ -30,22 +30,35 @@ public:
 	// -------------------------------------------------------------------------
 	int bulkload(					// bulkload b-tree from hash table in mem
 		int   n,						// number of entries
-		const Result *hashtable);		// hash table
+		const Result *table);		// hash table
 
 protected:
 	// -------------------------------------------------------------------------
-	int read_header(				// read <root> from buffer
-		const char *buf);				// the buffer
+	inline int read_header(const char *buf) { // read <root> from buffer
+		memcpy(&root_, buf, SIZEINT);
+		return SIZEINT;
+	}
 
 	// -------------------------------------------------------------------------
-	int write_header(				// write <root> into buffer
-		char *buf);						// the buffer (return)
+	inline int write_header(char *buf) { // write <root> into buffer
+		memcpy(buf, &root_, SIZEINT);
+		return SIZEINT;
+	}
 
 	// -------------------------------------------------------------------------
-	void load_root();				// load root of b-tree
+	inline void load_root() {		// load root of b-tree
+		if (root_ptr_ == NULL) {
+			root_ptr_ = new QAB_IndexNode();
+			root_ptr_->init_restore(this, root_);
+		}
+	}
 
 	// -------------------------------------------------------------------------
-	void delete_root();				// delete root of b-tree
+	inline void delete_root() {		// delete root of b-tree
+		if (root_ptr_ != NULL) {
+			delete root_ptr_; root_ptr_ = NULL;
+		}
+	}
 };
 
 #endif // __QAB_TREE_H

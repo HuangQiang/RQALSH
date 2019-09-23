@@ -81,7 +81,7 @@ int indexing_of_rqalsh_star(		// indexing of RQALSH*
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	sprintf(output_set, "%srqalsh_star_L=%d_M=%d.out", output_folder, L, M);
+	sprintf(output_set, "%srqalsh_star.out", output_folder);
 
 	FILE *fp = fopen(output_set, "a+");
 	if (!fp) {
@@ -93,11 +93,8 @@ int indexing_of_rqalsh_star(		// indexing of RQALSH*
 	//  indexing of RQALSH*
 	// -------------------------------------------------------------------------
 	gettimeofday(&g_start_time, NULL);
-	char index_path[200];
-	sprintf(index_path, "%srqalsh_star_L=%d_M=%d/", output_folder, L, M);
-
 	RQALSH_Star *lsh = new RQALSH_Star();
-	lsh->build(n, d, B, L, M, beta, delta, ratio, data, index_path);
+	lsh->build(n, d, B, L, M, beta, delta, ratio, data, output_folder);
 	lsh->display();
 
 	gettimeofday(&g_end_time, NULL);
@@ -116,15 +113,13 @@ int indexing_of_rqalsh_star(		// indexing of RQALSH*
 int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH*
 	int   qn,							// number of query objects
 	int   d,							// dimensionality
-	int   L,							// number of projection
-	int   M,							// number of candidates
 	const float **query,				// query set
 	const Result **R,					// truth set
 	const char *data_folder,			// data folder
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	sprintf(output_set, "%srqalsh_star_L=%d_M=%d.out", output_folder, L, M);
+	sprintf(output_set, "%srqalsh_star.out", output_folder);
 
 	FILE *fp = fopen(output_set, "a+");
 	if (!fp) {
@@ -135,14 +130,8 @@ int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH*
 	// -------------------------------------------------------------------------
 	//  load RQALSH*
 	// -------------------------------------------------------------------------
-	char index_path[200];
-	sprintf(index_path, "%srqalsh_star_L=%d_M=%d/", output_folder, L, M);
-
 	RQALSH_Star *lsh = new RQALSH_Star();
-	if (lsh->load(index_path)) {
-		printf("Could not load RQALSH_Star\n");
-		return 1;
-	}
+	if (lsh->load(output_folder)) return 1;
 	lsh->display();
 
 	// -------------------------------------------------------------------------
@@ -223,10 +212,11 @@ int indexing_of_rqalsh(				// indexing of RQALSH
 	gettimeofday(&g_start_time, NULL);
 	char index_path[200];
 	strcpy(index_path, output_folder);
-	strcat(index_path, "rqalsh/");
+	strcat(index_path, "indices/");
 
 	RQALSH *lsh = new RQALSH();
 	lsh->build(n, d, B, beta, delta, ratio, data, index_path);
+	lsh->display();
 
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
@@ -264,13 +254,11 @@ int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
 	// -------------------------------------------------------------------------
 	char index_path[200];
 	strcpy(index_path, output_folder);
-	strcat(index_path, "rqalsh/");
+	strcat(index_path, "indices/");
 
 	RQALSH *lsh = new RQALSH();
-	if (lsh->load(index_path)) {
-		printf("Could not load RQALSH\n");
-		return 1;
-	}
+	if (lsh->load(index_path)) return 1;
+	lsh->display();
 
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search by RQALSH
@@ -347,8 +335,9 @@ int indexing_of_drusilla_select(	// indexing of Drusilla_Select
 	//  Indexing of Drusilla_Select
 	// -------------------------------------------------------------------------
 	gettimeofday(&g_start_time, NULL);
-	Drusilla_Index* drusilla = new Drusilla_Index();
+	Drusilla_Select* drusilla = new Drusilla_Select();
 	drusilla->build(n, d, L, M, B, data, output_folder);
+	drusilla->display();
 
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
@@ -384,11 +373,9 @@ int kfn_of_drusilla_select(			// c-k-AFN via Drusilla_Select
 	// -------------------------------------------------------------------------
 	//  load index of Drusilla_Select
 	// -------------------------------------------------------------------------
-	Drusilla_Index *drusilla = new Drusilla_Index();
-	if (drusilla->load(output_folder)) {
-		printf("Could not load Drusilla_Index\n");
-		return 1;
-	}
+	Drusilla_Select *drusilla = new Drusilla_Select();
+	if (drusilla->load(output_folder)) return 1;
+	drusilla->display();
 
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search via Drusilla_Select
@@ -471,6 +458,7 @@ int indexing_of_qdafn(				// indexing of QDAFN
 
 	QDAFN* qdafn = new QDAFN();
 	qdafn->build(n, d, B, L, M, ratio, data, index_path);
+	qdafn->display();
 
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
@@ -500,7 +488,7 @@ int kfn_of_qdafn(					// c-k-AFN via QDAFN
 	strcpy(output_set, output_folder);
 	strcat(output_set, "qdafn.out");
 
-	FILE *fp = fopen(output_set, "w");
+	FILE *fp = fopen(output_set, "a+");
 	if (!fp) {
 		printf("Could not create %s\n", output_set);
 		return 1;
@@ -513,10 +501,8 @@ int kfn_of_qdafn(					// c-k-AFN via QDAFN
 	sprintf(index_path, "%sindices/", output_folder);
 
 	QDAFN *qdafn = new QDAFN();
-	if (qdafn->load(index_path)) {
-		printf("Could not load QDAFN\n");
-		return 1;
-	}
+	if (qdafn->load(index_path)) return 1;
+	qdafn->display();
 
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search via QDAFN

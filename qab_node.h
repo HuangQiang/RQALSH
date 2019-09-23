@@ -15,28 +15,27 @@ public:
 	// -------------------------------------------------------------------------
 	virtual void init(				// init a new node, which not exist
 		int   level,					// level (depth) in b-tree
-		QAB_Tree *btree);					// b-tree of this node
+		QAB_Tree *btree);				// b-tree of this node
 
 	// -------------------------------------------------------------------------
 	virtual void init_restore(		// load an exist node from disk to init
-		QAB_Tree *btree,					// b-tree of this node
+		QAB_Tree *btree,				// b-tree of this node
 		int   block);					// address of file of this node
 
 	// -------------------------------------------------------------------------
-	virtual void read_from_buffer(	// read a b-node from buffer
-		const char *buf);				// store info of a b-node
-
-	virtual void write_to_buffer(	// write a b-node into buffer
-		char *buf);						// store info of a b-node (return)
+	virtual void read_from_buffer(const char *buf) {}
 
 	// -------------------------------------------------------------------------
-	virtual int get_entry_size();	// get entry size in b-node
+	virtual void write_to_buffer(char *buf) {}
 
-	virtual int find_position_by_key(// find pos just less than input key
-		float key);						// input key
+	// -------------------------------------------------------------------------
+	virtual inline int get_entry_size() { return 0; }
 
-	virtual float get_key(			// get <key> indexed by <index>
-		int index);						// index
+	// -------------------------------------------------------------------------
+	virtual int find_position_by_key(float key) { return -1; }
+
+	// -------------------------------------------------------------------------
+	virtual inline float get_key(int index) { return -1.0f; }
 
 	// -------------------------------------------------------------------------
 	virtual QAB_Node* get_left_sibling(); // get left sibling node
@@ -44,25 +43,39 @@ public:
 	virtual QAB_Node* get_right_sibling(); // get right sibling node
 
 	// -------------------------------------------------------------------------
-	int get_block();				// get <block_>
-
-	int get_num_entries();			// get <num_entries_>
-
-	int get_level();				// get <level_>
+	inline int get_block() { return block_; }
 
 	// -------------------------------------------------------------------------
-	int get_header_size();			// get header size in b-node
-
-	float get_key_of_node();		// get key of this node
-
-	bool isFull();					// whether is full?
+	inline int get_num_entries() { return num_entries_; }
 
 	// -------------------------------------------------------------------------
-	void set_left_sibling(			// set <left_sibling>
-		int left_sibling);				// addr of left sibling node
+	inline int get_level() { return level_; }
 
-	void set_right_sibling(			// set <right sibling>
-		int right_sibling);				// addr of right sibling node
+	// -------------------------------------------------------------------------
+	//	<level>: SIZECHAR
+	//	<num_entries> <left_sibling> and <right_sibling>: SIZEINT
+	//  get header size in b-node
+	// -------------------------------------------------------------------------
+	inline int get_header_size() { return SIZECHAR+SIZEINT*3; } 
+
+	// -------------------------------------------------------------------------
+	inline float get_key_of_node() { return key_[0]; }	
+
+	// -------------------------------------------------------------------------
+	inline bool isFull() { 
+		if (num_entries_ >= capacity_) return true; 
+		else return false; 
+	}
+
+	// -------------------------------------------------------------------------
+	inline void set_left_sibling(int left_sibling) { 
+		left_sibling_ = left_sibling; 
+	}
+
+	// -------------------------------------------------------------------------
+	inline void set_right_sibling(int right_sibling) { 
+		right_sibling_ = right_sibling; 
+	}
 
 protected:
 	char  level_;					// level of b-tree (level > 0)
@@ -82,16 +95,16 @@ protected:
 // -----------------------------------------------------------------------------
 class QAB_IndexNode : public QAB_Node {
 public:
-	QAB_IndexNode();					// constructor
-	virtual ~QAB_IndexNode();			// destructor
+	QAB_IndexNode();				// default constructor
+	virtual ~QAB_IndexNode();		// destructor
 
 	// -------------------------------------------------------------------------
 	virtual void init(				// init a new node, which not exist
 		int   level,					// level (depth) in b-tree
-		QAB_Tree *btree);					// b-tree of this node
+		QAB_Tree *btree);				// b-tree of this node
 
 	virtual void init_restore(		// load an exist node from disk to init
-		QAB_Tree *btree,					// b-tree of this node
+		QAB_Tree *btree,				// b-tree of this node
 		int   block);					// address of file of this node
 
 	// -------------------------------------------------------------------------
@@ -102,13 +115,19 @@ public:
 		char *buf);						// store info of a b-node (return)
 
 	// -------------------------------------------------------------------------
-	virtual int get_entry_size();	// get entry size in b-node
+	//  entry: <key_>: SIZEFLOAT and <son_>: SIZEINT
+	// -------------------------------------------------------------------------
+	virtual inline int get_entry_size() { return SIZEFLOAT + SIZEINT; }
 
+	// -------------------------------------------------------------------------
 	virtual int find_position_by_key(// find pos just less than input key
 		float key);						// input key
 
-	virtual float get_key(			// get <key_> indexed by <index>
-		int index);						// index
+	// -------------------------------------------------------------------------
+	virtual inline float get_key(int index) { 
+		// assert(index >= 0 && index < num_entries_); 
+		return key_[index]; 
+	}
 
 	// -------------------------------------------------------------------------
 	virtual QAB_IndexNode* get_left_sibling(); // get left sibling node
@@ -116,8 +135,10 @@ public:
 	virtual QAB_IndexNode* get_right_sibling(); // get right sibling node
 
 	// -------------------------------------------------------------------------
-	int get_son(					// get <son_> indexed by <index>
-		int index);						// index
+	inline int get_son(int index) {	// get son indexed by <index>
+		// assert(index >= 0 && index < num_entries_); 
+		return son_[index]; 
+	}
 
 	// -------------------------------------------------------------------------
 	void add_new_child(				// add new child by its child node
@@ -154,13 +175,16 @@ public:
 		char *buf);						// store info of a b-node (return)
 
 	// -------------------------------------------------------------------------
-	virtual int get_entry_size();	// get entry size in b-node
+	virtual inline int get_entry_size() { return SIZEINT; }
 
 	virtual int find_position_by_key( // find pos just less than input key
 		float key);						// input key
 
-	virtual float get_key(			// get <key_> indexed by <index>
-		int index);						// index
+	// -------------------------------------------------------------------------
+	virtual inline float get_key(int index) { 
+		// assert(index >= 0 && index < num_keys_);
+		return key_[index]; 
+	}
 
 	// -------------------------------------------------------------------------
 	virtual QAB_LeafNode* get_left_sibling(); // get left sibling node
@@ -168,15 +192,24 @@ public:
 	virtual QAB_LeafNode* get_right_sibling(); // get right sibling node
 
 	// -------------------------------------------------------------------------
-	int get_key_size(				// get key size of this node
-		int block_length);				// block length
+	//  array of <key_> with number <capacity_keys_> + <number_keys_> (SIZEINT)
+	// -------------------------------------------------------------------------
+	inline int get_key_size(int block_length) { // block length
+		capacity_keys_ = (int) ceil((float) block_length / LEAF_NODE_SIZE); 
+		return capacity_keys_ * SIZEFLOAT + SIZEINT;
+	} 
 
-	int get_increment();			// get <increment>
+	// -------------------------------------------------------------------------
+	inline int get_increment() { return LEAF_NODE_SIZE / get_entry_size(); }
 
-	int get_num_keys();				// get <num_keys_>
+	// -------------------------------------------------------------------------
+	inline int get_num_keys() { return num_keys_; }
 
-	int get_entry_id(				// get entry id indexed by <index>
-		int index);						// index
+	// -------------------------------------------------------------------------
+	inline int get_entry_id(int index) { 
+		// assert(index >= 0 && index < num_entries_); 
+		return id_[index];
+	}
 
 	// -------------------------------------------------------------------------
 	void add_new_child(				// add new child by input id and key

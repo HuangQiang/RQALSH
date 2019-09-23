@@ -91,25 +91,31 @@ void read_data_from_buffer(			// read data from buffer
 
 // -----------------------------------------------------------------------------
 int read_ground_truth(				// read ground truth results from disk
-	int qn,								// number of query objects
-	const char *fname,					// address of truth set
+	int    qn,							// number of query objects
+	const  char *fname,					// address of truth set
 	Result **R);						// ground truth results (return)
 
 // -----------------------------------------------------------------------------
 float calc_l2_dist(					// calc L_2 norm (data type is float)
-	int dim,							// dimension
+	int   dim,							// dimension
+	const float *p1,					// 1st point
+	const float *p2);					// 2nd point
+
+// -----------------------------------------------------------------------------
+float calc_inner_product(			// calc inner product (data type is float)
+	int   dim,							// dimension
 	const float *p1,					// 1st point
 	const float *p2);					// 2nd point
 
 // -----------------------------------------------------------------------------
 float calc_recall(					// calc recall (percentage)
-	int k,								// top-k value
+	int   k,							// top-k value
 	const Result *R,					// ground truth results 
 	MaxK_List *list);					// results returned by algorithms
 
 // -----------------------------------------------------------------------------
 float calc_recall(					// calc recall (percentage)
-	int k,								// top-k value
+	int   k,							// top-k value
 	const Result *R,					// ground truth results 
 	const Result *result);				// results returned by algorithms
 
@@ -120,8 +126,8 @@ long long linear(					// linear scan search
 	int   B,							// page size
 	int   top_k,						// top-k value
 	const float *query,					// query object
-	const char *data_folder,			// data folder
-	MaxK_List *list);					// k-FN results (return)
+	const char  *data_folder,			// data folder
+	MaxK_List   *list);					// k-FN results (return)
 
 // -----------------------------------------------------------------------------
 int ground_truth(					// find ground truth

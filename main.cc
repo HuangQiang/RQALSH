@@ -14,7 +14,7 @@ void usage() 						// display usage of the package
 		"    -B     (integer)   page size\n"
 		"    -L	    (integer)   number of projection\n"
 		"    -M     (integer)   number of candidates\n"
-		"    -beta  (integer)   false positive percentage\n"
+		"    -beta  (integer)   numerb of false positives\n"
 		"    -delta (real)      error probability\n"
 		"    -c     (real)      approximation ratio (c > 1)\n"
 		"    -ds    (string)    address of data  set\n"
@@ -33,7 +33,7 @@ void usage() 						// display usage of the package
 		"        Params: -alg 1 -n -d -B -L -M -beta -delta -c -ds -df -of\n"
 		"\n"
 		"    2 - c-k-AFN Search of RQALSH*\n"
-		"        Params: -alg 2 -qn -d -L -M -qs -ts -df -of\n"
+		"        Params: -alg 2 -qn -d -qs -ts -df -of\n"
 		"\n"
 		"    3 - Indexing of RQALSH\n"
 		"        Params: -alg 3 -n -d -B -beta -delta -c -ds -df -of\n"
@@ -251,8 +251,8 @@ int main(int nargs, char** args)
 			(const float **) data, output_folder);
 		break;
 	case 2:
-		kfn_of_rqalsh_star(qn, d, L, M, (const float **) query, 
-			(const Result **) R, data_folder, output_folder);
+		kfn_of_rqalsh_star(qn, d, (const float **) query, (const Result **) R, 
+			data_folder, output_folder);
 		break;
 	case 3:
 		indexing_of_rqalsh(n, d, B, beta, delta, ratio, (const float **) data, 

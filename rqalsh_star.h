@@ -5,8 +5,8 @@ class RQALSH;
 class MaxK_List;
 
 // -----------------------------------------------------------------------------
-//  RQALSH_Star is used to solve the problem of c-k-Approximate Furthest 
-//  Neighbor (c-k-AFN) search
+//  RQALSH* is used to solve the problem of c-k-Approximate Furthest Neighbor 
+//  (c-k-AFN) search
 // -----------------------------------------------------------------------------
 class RQALSH_Star {
 public:
@@ -24,21 +24,21 @@ public:
 		float delta,					// error probability
 		float ratio,					// approximation ratio
 		const float **data, 			// data objects
-		const char *index_path);		// index path
+		const char  *path);				// index path
 
 	// -------------------------------------------------------------------------
 	int load(   					// load index
-		const char *index_path);		// index path
+		const char *path);				// index path
 
 	// -------------------------------------------------------------------------
 	void display();			        // display parameters
 
 	// -------------------------------------------------------------------------
 	long long kfn(					// c-k-AFN search
-		int top_k,						// top-k value
+		int   top_k,					// top-k value
 		const float *query,				// query objects
-		const char *data_folder,		// data folder
-		MaxK_List *list);				// k-FN results (return)
+		const char  *data_folder,		// data folder
+		MaxK_List   *list);				// k-FN results (return)
 
 protected:
 	int    n_pts_;					// number of data objects
@@ -49,10 +49,10 @@ protected:
 	int    beta_;                   // false positive percentage
     float  delta_;                  // error probability
     float  appr_ratio_;				// approximation ratio
-	char   index_path_[200];		// index path
+	char   path_[200];				// index path
 
-	int    sample_size_;			// number of sample data objects
-	int    *sample_id_;			    // sample data objects id
+	int    n_cand_;					// number of candidates
+	int    *cand_;				    // cadidate objects id
 	RQALSH *lsh_;					// index of sample data objects
 
     // -------------------------------------------------------------------------
@@ -62,11 +62,11 @@ protected:
 	// -------------------------------------------------------------------------
 	int calc_shift_data(			// calc shift data
 		const float **data,  			// data objects
-		float *shift_data);  			// shift data objects (return)
+		float **shift_data);  			// shift data objects (return)
 
 	// -------------------------------------------------------------------------
 	int data_dependent_select(		// data dependent selection
-		const float *shift_data);		// shift data objects
+		const float **shift_data);		// shift data objects
 
 	// -------------------------------------------------------------------------
 	int write_params();				// write parameters to disk

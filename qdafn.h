@@ -6,19 +6,12 @@ class  B_Tree;
 struct Result;
 
 // -----------------------------------------------------------------------------
-//  Queue_Item: structure of item for priority
-// -----------------------------------------------------------------------------
-struct Queue_Item {
-	float dist_;					// dist between obj and query after proj
-	int   tree_id_;					// tree id
-};
-
-struct Cmp {						// comparison function
-	bool operator()(Queue_Item a, Queue_Item b) {
-		if (fabs(a.dist_ - b.dist_) < FLOATZERO) {
-			return (a.tree_id_ > b.tree_id_);
+struct Cmp {						// cmp func for priority
+	bool operator()(Result a, Result b) {
+		if (fabs(a.key_ - b.key_) < FLOATZERO) {
+			return (a.id_ > b.id_);
 		}
-		if (a.dist_ > b.dist_) return false;
+		if (a.key_ > b.key_) return false;
 		else return true;
 	}
 };
@@ -72,8 +65,8 @@ void zigset(						// set the seed and create the tables
 // -----------------------------------------------------------------------------
 class QDAFN {
 public:
-	QDAFN();				// default constructor
-	~QDAFN();				// destructor
+	QDAFN();						// default constructor
+	~QDAFN();						// destructor
 
 	// -------------------------------------------------------------------------
 	void build(						// build index
@@ -84,14 +77,17 @@ public:
 		int   m,						// number of candidates
 		float ratio,					// approximation ratio
 		const float **data,				// data objects
-		const char *index_path);		// index path
+		const char  *path);				// index path
+
+	// -------------------------------------------------------------------------
+	void display();					// display parameters
 
 	// -------------------------------------------------------------------------
 	int load(						// load index
-		const char *index_path);		// index path
+		const char *path);				// index path
 
 	// -------------------------------------------------------------------------
-	int search(						// c-k-afn search
+	long long search(				// c-k-afn search
 		int   top_k,					// top-k value
 		const float *query,				// query object
 		const char *data_folder,		// new format data folder
@@ -101,13 +97,13 @@ protected:
 	int    n_pts_;					// number of data objects <n>
 	int    dim_;					// dimensionality <d>
 	int    B_;						// page size in words
-	char   index_path_[200];		// folder to store index
+	char   path_[200];				// folder to store index
 
 	int    l_;						// number of random projections <l>
 	int    m_;						// number of candidates <m>
 	int    page_io_;				// page I/O for search
 	int    dist_io_;				// random I/O to compute Euclidean dist
-	float  *projections_;			// random projection vectors
+	float  *proj_;					// random projection vectors
 	Result **table_;				// projected distance arrays
 	B_Tree **trees_;				// B+ trees
 
@@ -118,37 +114,37 @@ protected:
 
 	// -------------------------------------------------------------------------
 	void get_tree_filename(			// get file name of tree
-		int  tree_id,					// tree id
+		int  tid,						// tree id
 		char *fname);					// file name of tree (return)
 
 	// -------------------------------------------------------------------------
-	int int_search(					// internal search
+	long long int_search(			// internal search
 		int   top_k,					// top-k value
 		const float *query,				// query object
-		const char *data_folder,		// new format data folder
-		MaxK_List *list);				// top-k results (return)
+		const char  *data_folder,		// new format data folder
+		MaxK_List   *list);				// top-k results (return)
 
 	// -------------------------------------------------------------------------
-	int ext_search(					// external search
+	long long ext_search(			// external search
 		int   top_k,					// top-k value
 		const float *query,				// query object
-		const char *data_folder,		// new format data folder
-		MaxK_List *list);				// top-k results (return)
+		const char  *data_folder,		// new format data folder
+		MaxK_List   *list);				// top-k results (return)
 
 	// -------------------------------------------------------------------------
 	void init_buffer(				// init page buffer
 		const float *query,				// query point
-		QDAFN_PageBuffer *page,				// buffer page (return)
+		QDAFN_PageBuffer *page,			// buffer page (return)
 		float *proj_q);					// projection of query (return)
 
 	// -------------------------------------------------------------------------
 	void update_page(				// update page
-		QDAFN_PageBuffer *page);				// page buffer (return)
+		QDAFN_PageBuffer *page);		// page buffer (return)
 
 	// -------------------------------------------------------------------------
 	float calc_dist(				// calc projected distance
 		float proj_q,					// projection of query
-		const QDAFN_PageBuffer *page);		// page buffer
+		const QDAFN_PageBuffer *page);	// page buffer
 };
 
 #endif // __QDAFN_H

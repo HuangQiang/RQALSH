@@ -1,31 +1,31 @@
 #include "headers.h"
 
 // -----------------------------------------------------------------------------
-Drusilla_Index::Drusilla_Index()	// default constructor
+Drusilla_Select::Drusilla_Select()	// default constructor
 {
-	n_pts_   = -1;
-	dim_     = -1;
-	l_       = -1;
-	m_       = -1;
-	B_       = -1;
-	fn_cand_ = NULL;
+	n_pts_ = -1;
+	dim_   = -1;
+	l_     = -1;
+	m_     = -1;
+	B_     = -1;
+	cand_  = NULL;
 }
 
 // -----------------------------------------------------------------------------
-Drusilla_Index::~Drusilla_Index()	// destructor
+Drusilla_Select::~Drusilla_Select()	// destructor
 {
-	delete[] fn_cand_; fn_cand_ = NULL;
+	delete[] cand_; cand_ = NULL;
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::build(			// build index
+int Drusilla_Select::build(			// build index
 	int   n,							// number of data points
 	int   d,							// number of dimensions
 	int   l,							// number of projections
 	int   m,							// number of candidates on each proj
 	int   B,							// page size
 	const float **data,					// data objects
-	const char *index_path)				// index path
+	const char  *path)					// index path
 {
 	// -------------------------------------------------------------------------
 	//  init parameters
@@ -36,8 +36,8 @@ int Drusilla_Index::build(			// build index
 	m_     = m;
 	B_     = B;
 
-	strcpy(fname_, index_path);
-	strcat(fname_, "drusilla.para");
+	strcpy(path_, path);
+	strcat(path_, "drusilla.index");
 
 	// -------------------------------------------------------------------------
 	//  build hash tables
@@ -53,7 +53,7 @@ int Drusilla_Index::build(			// build index
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::bulkload(		// build hash tables
+int Drusilla_Select::bulkload(		// build hash tables
 	const float **data)					// data objects
 {
 	// -------------------------------------------------------------------------
@@ -72,8 +72,9 @@ int Drusilla_Index::bulkload(		// build hash tables
 	// -------------------------------------------------------------------------
 	//  calc the shift data
 	// -------------------------------------------------------------------------
-	vector<vector<float> > shift_data(n_pts_, vector<float>(dim_, 0.0f));
+	float **shift_data = new float*[n_pts_];
 	for (int i = 0; i < n_pts_; ++i) {
+		shift_data[i] = new float[dim_];
 		for (int j = 0; j < dim_; ++j) {
 			shift_data[i][j] = data[i][j] - centroid[j];
 		}
@@ -87,71 +88,62 @@ int Drusilla_Index::bulkload(		// build hash tables
 	vector<float> norm(n_pts_, 0.0f);
 
 	for (int i = 0; i < n_pts_; ++i) {
-		for (int j = 0; j < dim_; ++j) {
-			float x = shift_data[i][j];
-			norm[i] += x * x;
-		}
-		norm[i] = sqrt(norm[i]);
-
+		norm[i] = sqrt(calc_inner_product(dim_, shift_data[i], shift_data[i]));
 		if (norm[i] > max_norm) {
 			max_norm = norm[i];
 			max_id = i;
 		}
 	}
 
-	vector<float> projection(dim_, 0.0f);
 	vector<bool>  close_angle(n_pts_, false);
-	Result *score_pair = new Result[n_pts_];
+	Result *score = new Result[n_pts_];
+	float  *proj  = new float[dim_];
 
-	fn_cand_ = new int[l_ * m_];
+	cand_ = new int[l_ * m_];
 	for (int i = 0; i < l_; ++i) {
 		// ---------------------------------------------------------------------
 		//  select the projection vector with largest norm and normalize it
 		// ---------------------------------------------------------------------
 		for (int j = 0; j < dim_; ++j) {
-			projection[j] = shift_data[max_id][j] / norm[max_id];
+			proj[j] = shift_data[max_id][j] / norm[max_id];
 		}
 
 		// ---------------------------------------------------------------------
 		//  calculate offsets and distortions
 		// ---------------------------------------------------------------------
 		for (int j = 0; j < n_pts_; ++j) {
-			score_pair[j].id_ = j;
+			score[j].id_ = j;
 			close_angle[j] = false;
 
 			if (norm[j] > 0.0f) {
-				float offset = 0.0f;
-				for (int k = 0; k < dim_; ++k) {
-					offset += shift_data[j][k] * projection[k];
-				}
+				float offset = calc_inner_product(dim_, shift_data[j], proj);
 
 				float distortion = 0.0F;
 				for (int k = 0; k < dim_; ++k) {
-					float x = shift_data[j][k] - offset * projection[k];
-					distortion += x * x;
+					distortion += SQR(shift_data[j][k] - offset * proj[k]);
 				}
 				distortion = sqrt(distortion);
 
-				score_pair[j].key_ = fabs(offset) - fabs(distortion);
+				score[j].key_ = fabs(offset) - fabs(distortion);
 				if (atan(distortion / fabs(offset)) < ANGLE) {
 					close_angle[j] = true;
 				}
 			}
 			else if (fabs(norm[j]) < FLOATZERO) {
-				score_pair[j].key_ = MINREAL + 1.0f;
+				score[j].key_ = MINREAL + 1.0f;
 			}
 			else {
-				score_pair[j].key_ = MINREAL;
+				score[j].key_ = MINREAL;
 			}
 		}
 
 		// ---------------------------------------------------------------------
 		//  collect the idects that are well-represented by this projection
 		// ---------------------------------------------------------------------
-		qsort(score_pair, n_pts_, sizeof(Result), ResultCompDesc);
+		qsort(score, n_pts_, sizeof(Result), ResultCompDesc);
 		for (int j = 0; j < m_; ++j) {
-			int id = score_pair[j].id_;
-			fn_cand_[i * m_ + j] = id;
+			int id = score[j].id_;
+			cand_[i * m_ + j] = id;
 			
 			norm[id] = -1.0f;
 		}
@@ -174,53 +166,55 @@ int Drusilla_Index::bulkload(		// build hash tables
 	// -------------------------------------------------------------------------
 	//  release space
 	// -------------------------------------------------------------------------
-	delete[] score_pair; score_pair = NULL;
+	delete[] proj;  proj  = NULL;
+	delete[] score; score = NULL;
+
+	for (int i = 0; i < n_pts_; ++i) {
+		delete[] shift_data[i]; shift_data[i] = NULL;
+	}
+	delete[] shift_data; shift_data = NULL;
 
 	return 0;
 }
 
 // -----------------------------------------------------------------------------
-void Drusilla_Index::display()		// display parameters
+void Drusilla_Select::display()		// display parameters
 {
 	printf("Parameters of Drusilla_Select (SISAP2016 paper):\n");
-	printf("    n     = %d\n",   n_pts_);
-	printf("    d     = %d\n",   dim_);
-	printf("    l     = %d\n",   l_);
-	printf("    m     = %d\n",   m_);
-	printf("    B     = %d\n",   B_);
-	printf("    fname = %s\n\n", fname_);
+	printf("    n    = %d\n",   n_pts_);
+	printf("    d    = %d\n",   dim_);
+	printf("    l    = %d\n",   l_);
+	printf("    m    = %d\n",   m_);
+	printf("    B    = %d\n",   B_);
+	printf("    path = %s\n\n", path_);
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::write_params()	// write parameters to disk
+int Drusilla_Select::write_params()	// write parameters to disk
 {
-	FILE* fp = fopen(fname_, "w");
+	FILE *fp = fopen(path_, "wb");
 	if (!fp) {
-		printf("Culd not create %s.\n", fname_);
+		printf("Culd not create %s\n", path_);
 		return 1;
 	}
 
-	fprintf(fp, "n = %d\n", n_pts_);
-	fprintf(fp, "d = %d\n", dim_);
-	fprintf(fp, "l = %d\n", l_);
-	fprintf(fp, "m = %d\n", m_);
-	fprintf(fp, "B = %d\n", B_);
-
-	int size = l_ * m_;
-	for (int i = 0; i < size; ++i) {
-		fprintf(fp, "%d\n", fn_cand_[i]);
-	}
+	fwrite(&n_pts_, SIZEINT, 1,     fp);
+	fwrite(&dim_,   SIZEINT, 1,     fp);
+	fwrite(&B_,     SIZEINT, 1,     fp);
+	fwrite(&l_,     SIZEINT, 1,     fp);
+	fwrite(&m_,     SIZEINT, 1,     fp);
+	fwrite(cand_,   SIZEINT, l_*m_, fp);
 	fclose(fp);
 	
 	return 0;
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::load(			// load index
-	const char *index_path)				// index path
+int Drusilla_Select::load(			// load index
+	const char *path)					// index path
 {
-	strcpy(fname_, index_path);
-	strcat(fname_, "drusilla.para");
+	strcpy(path_, path);
+	strcat(path_, "drusilla.index");
 
 	// -------------------------------------------------------------------------
 	//  read index file from disk
@@ -231,40 +225,38 @@ int Drusilla_Index::load(			// load index
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::read_params()	// read parameters from disk
+int Drusilla_Select::read_params()	// read parameters from disk
 {
-	FILE* fp = fopen(fname_, "r");
+	FILE *fp = fopen(path_, "rb");
 	if (!fp) {
-		fprintf(stderr, "Could not open %s\n", fname_);
+		printf("Could not open %s\n", path_);
 		return 1;
 	}
 
-	fscanf(fp, "n = %d\n", &n_pts_);
-	fscanf(fp, "d = %d\n", &dim_);
-	fscanf(fp, "l = %d\n", &l_);
-	fscanf(fp, "m = %d\n", &m_);
-	fscanf(fp, "B = %d\n", &B_);
+	fread(&n_pts_, SIZEINT, 1, fp);
+	fread(&dim_,   SIZEINT, 1, fp);
+	fread(&B_,     SIZEINT, 1, fp);
+	fread(&l_,     SIZEINT, 1, fp);
+	fread(&m_,     SIZEINT, 1, fp);
 
 	int size = l_ * m_;
-	fn_cand_ = new int[size];
-	for (int i = 0; i < size; ++i) {
-		fscanf(fp, "%d\n", &fn_cand_[i]);
-	}
+	cand_ = new int[size];
+	fread(cand_, SIZEINT, size, fp);
 	fclose(fp);
 	
 	return 0;
 }
 
 // -----------------------------------------------------------------------------
-int Drusilla_Index::search(			// c-k-AFN search
+long long Drusilla_Select::search(	// c-k-AFN search
 	const float *query,					// query point
-	const char *data_folder,			// new format data folder
-	MaxK_List *list)					// top-k results (return)
+	const char  *data_folder,			// new format data folder
+	MaxK_List   *list)					// top-k results (return)
 {
 	float *data = new float[dim_];	
-	int size = l_ * m_;
+	long long size = l_ * m_;
 	for (int i = 0; i < size; ++i) {
-		int id = fn_cand_[i];
+		int id = cand_[i];
 		read_data_new_format(id, dim_, B_, data_folder, data);
 
 		float dist = calc_l2_dist(dim_, (const float *) data, query);

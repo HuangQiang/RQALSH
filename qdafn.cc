@@ -50,14 +50,10 @@ float efix()
 	float x;
 
 	while (1) {
-		if (iz == 0) {
-			return 7.69711F-log(UNI); // iz == 0
-		}
+		if (iz == 0) return 7.69711F-log(UNI); // iz == 0
 
 		x = jz * we[iz];
-		if (fe[iz] + UNI*(fe[iz-1]-fe[iz]) < exp(-x)) {
-			return x;
-		}
+		if (fe[iz] + UNI*(fe[iz-1]-fe[iz]) < exp(-x)) return x;
 
 		jz = SHR3;					// initiate, try to exit loop
 		iz = (jz & 255);
@@ -77,12 +73,12 @@ void zigset(						// set the seed and create the tables
 	double vn = 9.91256303526217e-3;
 	double q;
 
-	double de=7.697117470131487;
-	double te=de;
-	double ve=3.949659822581572e-3;
+	double de = 7.697117470131487;
+	double te = de;
+	double ve = 3.949659822581572e-3;
 	int i;
 
-	jsr^=jsrseed;
+	jsr ^= jsrseed;
 
 	// -------------------------------------------------------------------------
 	//  set up tables for RNOR
@@ -106,7 +102,7 @@ void zigset(						// set the seed and create the tables
 	}
 
 	// -------------------------------------------------------------------------
-	//  Set up tables for REXP
+	//  set up tables for REXP
 	// -------------------------------------------------------------------------
 	q = ve / exp(-de);
 	ke[0] = (de / q) * m2;
@@ -130,37 +126,38 @@ void zigset(						// set the seed and create the tables
 // -----------------------------------------------------------------------------
 QDAFN::QDAFN()						// default constructor
 {
-	n_pts_       = -1;
-	dim_         = -1;
-	B_           = -1;
-	l_           = -1;
-	m_           = -1;
-	page_io_     = -1;
-	dist_io_     = -1;
-	projections_ = NULL;
-	table_       = NULL;
-	trees_       = NULL;
+	n_pts_   = -1;
+	dim_     = -1;
+	B_       = -1;
+	l_       = -1;
+	m_       = -1;
+	page_io_ = -1;
+	dist_io_ = -1;
+	proj_    = NULL;
+	table_   = NULL;
+	trees_   = NULL;
 }
 
 // -----------------------------------------------------------------------------
 QDAFN::~QDAFN()						// destructor
 {
-	if (projections_ != NULL) {
-		delete[] projections_; projections_ = NULL;
-	}
-
-	if (table_ != NULL) {
-		for (int i = 0; i < l_; ++i) {
-			delete table_[i]; table_[i] = NULL;
-		}
-		delete[] table_; table_ = NULL;
-	}
+	delete[] proj_; proj_ = NULL;
 
 	if (trees_ != NULL) {
 		for (int i = 0; i < l_; ++i) {
-			delete trees_[i]; trees_[i] = NULL;
+			if (trees_[i] != NULL) {
+				delete trees_[i]; trees_[i] = NULL;
+			}
 		}
 		delete[] trees_; trees_ = NULL;
+	}
+	if (table_ != NULL) {
+		for (int i = 0; i < l_; ++i) {
+			if (table_[i] != NULL) {
+				delete table_[i]; table_[i] = NULL;
+			}
+		}
+		delete[] table_; table_ = NULL;
 	}
 }
 
@@ -173,7 +170,7 @@ void QDAFN::build(					// build index
 	int   m,							// number of candidates
 	float ratio,						// approximation ratio
 	const float **data,					// data objects
-	const char *index_path)				// index path
+	const char  *path)					// index path
 {
 	// -------------------------------------------------------------------------
 	//  set up parameters of QDAFN
@@ -182,21 +179,21 @@ void QDAFN::build(					// build index
 	dim_   = d;
 	B_     = B;
 
-	strcpy(index_path_, index_path);
-	create_dir(index_path_);
+	strcpy(path_, path);
+	create_dir(path_);
 
 	if (l == 0 || m == 0) {
 		l_ = 2 * (int) ceil(pow((float) n, 1.0F/(ratio*ratio)));
 		if (l_ < 1) {
-			fprintf(stderr, "bad number of projection <l> %d\n", l_);
-			exit(1);
+			printf("bad number of projection <l> %d\n", l_);
+			return;
 		}
 
 		float x = pow(log((float) n), (ratio*ratio/2.0F - 1.0F/3.0F));
 		m_ = 1 + (int) ceil(E * E * l_ * x);
 		if (m_ < 1) {
-			fprintf(stderr, "bad number of candidates <m> %d\n", m_);
-			exit(1);
+			printf("bad number of candidates <m> %d\n", m_);
+			return;
 		}
 	}
 	else {
@@ -204,141 +201,143 @@ void QDAFN::build(					// build index
 		m_ = m;
 	}
 
-	printf("Build Index of QDAFN (SISAP2015 paper):\n");
-	printf("    n         = %d\n",   n_pts_);
-	printf("    d         = %d\n",   dim_);
-	printf("    B         = %d\n",   B_);
-	printf("    l         = %d\n",   l_);
-	printf("    m         = %d\n",   m_);
-	printf("    algorithm = %s\n",   algoname[2]);
-	printf("    path      = %s\n\n", index_path_);
-
 	// -------------------------------------------------------------------------
 	//  generate random projection directions
-	//  TODO: allow adjustable seed, here we use random seed
 	// -------------------------------------------------------------------------
-	zigset(MAGIC + time(NULL));
+	// zigset(MAGIC + time(NULL));
+	zigset(MAGIC + 17); 			// use fix seed 
 
 	int size = l_ * dim_;
-	projections_ = new float[size];
+	proj_ = new float[size];
 	for (int i = 0; i < size; ++i) {
-		projections_[i] = RNOR / sqrt((float) dim_);
+		proj_[i] = RNOR / sqrt((float) dim_);
 	}
 
 	// -------------------------------------------------------------------------
 	//  write the "para" file
 	// -------------------------------------------------------------------------
 	char fname[200];
-	strcpy(fname, index_path_);
+	strcpy(fname, path_);
 	strcat(fname, "para");
 
-	FILE* fp = fopen(fname, "wb");
+	FILE *fp = fopen(fname, "wb");
 	if (!fp) {
 		printf("Could not create %s\n", fname);
-		printf("Perhaps no such folder %s?\n", index_path_);
-		exit(1);
+		printf("Perhaps no such folder %s?\n", path_);
+		return;
 	}
 
-	fwrite(&n_pts_, SIZEINT, 1, fp);
-	fwrite(&dim_, SIZEINT, 1, fp);
-	fwrite(&B_, SIZEINT, 1, fp);
-	fwrite(&l_, SIZEINT, 1, fp);
-	fwrite(&m_, SIZEINT, 1, fp);
-	fwrite(projections_, SIZEFLOAT, l_ * dim_, fp);
+	fwrite(&n_pts_, SIZEINT,   1,    fp);
+	fwrite(&dim_,   SIZEINT,   1,    fp);
+	fwrite(&B_,     SIZEINT,   1,    fp);
+	fwrite(&l_,     SIZEINT,   1,    fp);
+	fwrite(&m_,     SIZEINT,   1,    fp);
+	fwrite(proj_,   SIZEFLOAT, size, fp);
 
 	// -------------------------------------------------------------------------
 	//  construct the projected distance arrays
 	// -------------------------------------------------------------------------
-	table_ = new Result*[l_];
-	for (int i = 0; i < l_; ++i) {
-		table_[i] = new Result[n_pts_];
-		for (int j = 0; j < n_pts_; ++j) {
-			table_[i][j].id_  = j;
-			table_[i][j].key_ = calc_proj(i, data[j]);
-		}
+	Result *table = new Result[n_pts_];
+	if (m_ > CANDIDATES) {
+		for (int i = 0; i < l_; ++i) {
+			for (int j = 0; j < n_pts_; ++j) {
+				table[j].id_  = j;
+				table[j].key_ = calc_proj(i, data[j]);
+			}
+			qsort(table, n_pts_, sizeof(Result), ResultComp);
 
-		qsort(table_[i], n_pts_, sizeof(Result), ResultComp);
-
-		if (m_ > CANDIDATES) {
 			// -----------------------------------------------------------------
 			//  index with B+ trees
 			// -----------------------------------------------------------------
 			get_tree_filename(i, fname);
+
 			B_Tree *bt = new B_Tree();
 			bt->init(B_, fname);
-			if (bt->bulkload(m_, table_[i])) return;
+			if (bt->bulkload(m_, table)) return;
 			delete bt; bt = NULL;
 		}
-		else {
+	}
+	else {
+		for (int i = 0; i < l_; ++i) {
+			for (int j = 0; j < n_pts_; ++j) {
+				table[j].id_  = j;
+				table[j].key_ = calc_proj(i, data[j]);
+			}
+			qsort(table, n_pts_, sizeof(Result), ResultComp);
+
 			// -----------------------------------------------------------------
 			//  store in the 'para' file
 			// -----------------------------------------------------------------
-			fwrite(table_[i], sizeof(Result), m_, fp);
+			fwrite(table, sizeof(Result), m_, fp);
 		}
 	}
-
 	fclose(fp);
+
+	delete[] table; table = NULL;
 }
 
 // -----------------------------------------------------------------------------
-float QDAFN::calc_proj(	// calc projection of input data object
+inline float QDAFN::calc_proj(		// calc projection of input data object
 	int   id,							// projection vector id
 	const float *data)					// input data object
 {
-	int   base   = id * dim_;
-	float result = 0.0f;
+	int   base = id * dim_;
+	float ret  = 0.0f;
 	for (int i = 0; i < dim_; ++i) {
-		result += projections_[base + i] * data[i];
+		ret += proj_[base + i] * data[i];
 	}
-	return result;
+	return ret;
 }
 
 // -----------------------------------------------------------------------------
-void QDAFN::get_tree_filename(	// get file name of b-tree
-	int tree_id,						// tree id, from 0 to m-1
-	char* fname)						// file name (return)
+inline void QDAFN::get_tree_filename( // get file name of b-tree
+	int  tid,							// tree id, from 0 to m-1
+	char *fname)						// file name (return)
 {
-	sprintf(fname, "%s%d.qdafn", index_path_, tree_id);
+	sprintf(fname, "%s%d.qdafn", path_, tid);
 }
 
 // -----------------------------------------------------------------------------
-int QDAFN::load(			// load index
-	const char *index_path)				// index path
+void QDAFN::display()				// display parameters
 {
-	strcpy(index_path_, index_path);
+	printf("Parameters of QDAFN (SISAP2015 paper):\n");
+	printf("    n    = %d\n",   n_pts_);
+	printf("    d    = %d\n",   dim_);
+	printf("    B    = %d\n",   B_);
+	printf("    l    = %d\n",   l_);
+	printf("    m    = %d\n",   m_);
+	printf("    algo = %s\n",   algoname[2]);
+	printf("    path = %s\n\n", path_);
+}
+
+// -----------------------------------------------------------------------------
+int QDAFN::load(					// load index
+	const char *path)					// index path
+{
+	strcpy(path_, path);
 
 	// -------------------------------------------------------------------------
 	//  read the "para" file
 	// -------------------------------------------------------------------------
 	char fname[200];
-	strcpy(fname, index_path_);
+	strcpy(fname, path_);
 	strcat(fname, "para");
 
-	FILE* fp = fopen(fname, "rb");
+	FILE *fp = fopen(fname, "rb");
 	if (!fp) {
-		fprintf(stderr, "Could not open %s\n", fname);
-		exit(1);
+		printf("Could not open %s\n", fname);
+		return 1;
 	}
 
 	fread(&n_pts_, SIZEINT, 1, fp);
-	fread(&dim_, SIZEINT, 1, fp);
-	fread(&B_, SIZEINT, 1, fp);
-	fread(&l_, SIZEINT, 1, fp);
-	fread(&m_, SIZEINT, 1, fp);
+	fread(&dim_,   SIZEINT, 1, fp);
+	fread(&B_,     SIZEINT, 1, fp);
+	fread(&l_,     SIZEINT, 1, fp);
+	fread(&m_,     SIZEINT, 1, fp);
 
 	int size = l_ * dim_;
-	projections_ = new float[size];
-	fread(projections_, SIZEFLOAT, size, fp);
-
-	printf("Load Index of QDAFN (SISAP2015 paper):\n");
-	printf("    n         = %d\n", n_pts_);
-	printf("    d         = %d\n", dim_);
-	printf("    B         = %d\n", B_);
-	printf("    l         = %d\n", l_);
-	printf("    m         = %d\n", m_);
-	printf("    algorithm = %s\n", algoname[2]);
-	printf("    path      = %s\n", index_path_);
-	printf("\n");
+	proj_ = new float[size];
+	fread(proj_, SIZEFLOAT, size, fp);
 
 	if (m_ > CANDIDATES) {
 		// ---------------------------------------------------------------------
@@ -368,18 +367,22 @@ int QDAFN::load(			// load index
 }
 
 // -----------------------------------------------------------------------------
-int QDAFN::search(			// c-k-AFN search
+long long QDAFN::search(			// c-k-AFN search
 	int   top_k,						// top-k value
 	const float *query,					// query object
 	const char *data_folder,			// new format data folder
 	MaxK_List *list)					// top-k results (return)
 {
-	if (m_ > CANDIDATES) return ext_search(top_k, query, data_folder, list);
-	else return int_search(top_k, query, data_folder, list);
+	if (m_ > CANDIDATES) {
+		return ext_search(top_k, query, data_folder, list);
+	}
+	else {
+		return int_search(top_k, query, data_folder, list);
+	}
 }
 
 // -----------------------------------------------------------------------------
-int QDAFN::int_search(		// internal search
+long long QDAFN::int_search(		// internal search
 	int   top_k,						// top-k value
 	const float *query,					// query object
 	const char *data_folder,			// new format data folder
@@ -407,11 +410,11 @@ int QDAFN::int_search(		// internal search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	priority_queue<Queue_Item, vector<Queue_Item>, Cmp> pri_queue;
-	Queue_Item q_item;
+	priority_queue<Result, vector<Result>, Cmp> pri_queue;
+	Result q_item;
 	for (int i = 0; i < l_; ++i) {
-		q_item.dist_ = fabs(table_[i][next[i]].key_ - proj_q[i]);
-		q_item.tree_id_ = i;
+		q_item.key_ = fabs(table_[i][next[i]].key_ - proj_q[i]);
+		q_item.id_  = i;
 
 		pri_queue.push(q_item);
 	}
@@ -428,7 +431,7 @@ int QDAFN::int_search(		// internal search
 		// ---------------------------------------------------------------------
 		//  check the current candidate
 		// ---------------------------------------------------------------------
-		int pid = q_item.tree_id_;
+		int pid = q_item.id_;
 		int id  = table_[pid][next[pid]].id_;
 		if (!checked[id]) {
 			checked[id] = true;
@@ -443,7 +446,7 @@ int QDAFN::int_search(		// internal search
 		//  update the priority queue
 		// ---------------------------------------------------------------------
 		if (++next[pid] < m_) {
-			q_item.dist_ = fabs(table_[pid][next[pid]].key_ - proj_q[pid]);
+			q_item.key_ = fabs(table_[pid][next[pid]].key_ - proj_q[pid]);
 			pri_queue.push(q_item);
 		}
 	}
@@ -451,16 +454,16 @@ int QDAFN::int_search(		// internal search
 	// -------------------------------------------------------------------------
 	//  release space
 	// -------------------------------------------------------------------------
-	delete[] proj_q; proj_q = NULL;
-	delete[] next; next = NULL;
+	delete[] proj_q;  proj_q  = NULL;
+	delete[] next;    next    = NULL;
 	delete[] checked; checked = NULL;
-	delete[] data; data = NULL;
+	delete[] data;    data    = NULL;
 
-	return dist_io_;
+	return (long long) dist_io_;
 }
 
 // -----------------------------------------------------------------------------
-int QDAFN::ext_search(		// external search
+long long QDAFN::ext_search(		// external search
 	int   top_k,						// top-k value
 	const float *query,					// query object
 	const char *data_folder,			// new format data folder
@@ -496,12 +499,12 @@ int QDAFN::ext_search(		// external search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	priority_queue<Queue_Item, vector<Queue_Item>, Cmp> pri_queue;
-	Queue_Item q_item;
+	priority_queue<Result, vector<Result>, Cmp> pri_queue;
+	Result q_item;
 	for (int i = 0; i < l_; ++i) {
 		if (page[i].node_) {
-			q_item.dist_    = calc_dist(proj_q[i], &page[i]);
-			q_item.tree_id_ = i;
+			q_item.key_ = calc_dist(proj_q[i], &page[i]);
+			q_item.id_  = i;
 
 			pri_queue.push(q_item);
 		}
@@ -512,7 +515,7 @@ int QDAFN::ext_search(		// external search
 		q_item = pri_queue.top();	// get the object with largest proj dist
 		pri_queue.pop();			// delete the object from the queue
 
-		int j = q_item.tree_id_;
+		int j = q_item.id_;
 		int id = page[j].node_->get_son(page[j].pos_);
 		if (!checked[id]) {
 			checked[id] = true;
@@ -525,7 +528,7 @@ int QDAFN::ext_search(		// external search
 
 		update_page(&page[j]);		// update page
 		if (page[j].node_) {		// update priority queue
-			q_item.dist_ = calc_dist(proj_q[j], &page[j]);
+			q_item.key_ = calc_dist(proj_q[j], &page[j]);
 			pri_queue.push(q_item);
 		}
 	}
@@ -535,8 +538,8 @@ int QDAFN::ext_search(		// external search
 	// -------------------------------------------------------------------------
 	while (!pri_queue.empty()) pri_queue.pop();
 
-	delete[] proj_q;  proj_q = NULL;
-	delete[] data;    data = NULL;
+	delete[] proj_q;  proj_q  = NULL;
+	delete[] data;    data    = NULL;
 	delete[] checked; checked = NULL;
 	for (int i = 0; i < l_; ++i) {
 		if (page[i].node_ != NULL) {
@@ -545,13 +548,13 @@ int QDAFN::ext_search(		// external search
 	}
 	delete[] page; page = NULL;
 
-	return page_io_ + dist_io_;
+	return (long long) (page_io_ + dist_io_);
 }
 
 // -----------------------------------------------------------------------------
-void QDAFN::init_buffer(	// init page buffer
+void QDAFN::init_buffer(			// init page buffer
 	const float *query,					// query point
-	QDAFN_PageBuffer *page,					// buffer page (return)
+	QDAFN_PageBuffer *page,				// buffer page (return)
 	float *proj_q)						// projection of query (return)
 {
 	int block = -1;
@@ -563,7 +566,7 @@ void QDAFN::init_buffer(	// init page buffer
 		block = trees_[i]->root_;
 		node = new B_Node();
 		node->init_restore(trees_[i], block);
-		page_io_++;
+		++page_io_;
 
 		if (node->get_level() == 0) {
 			// -----------------------------------------------------------------
@@ -584,14 +587,14 @@ void QDAFN::init_buffer(	// init page buffer
 
 				node = new B_Node();
 				node->init_restore(trees_[i], block);
-				page_io_++;
+				++page_io_;
 			}
 
 			block = node->get_son(0);
 			page[i].node_ = new B_Node();
 			page[i].node_->init_restore(trees_[i], block);
 			page[i].pos_ = 0;
-			page_io_++;
+			++page_io_;
 
 			if (node != NULL) {
 				delete node; node = NULL;
@@ -601,13 +604,13 @@ void QDAFN::init_buffer(	// init page buffer
 }
 
 // -----------------------------------------------------------------------------
-void QDAFN::update_page(	// update right node info
-	QDAFN_PageBuffer *page)					// page buffer
+void QDAFN::update_page(			// update right node info
+	QDAFN_PageBuffer *page)				// page buffer
 {
 	B_Node *node = NULL;
 	B_Node *old_node = NULL;
 
-	page->pos_++;
+	++page->pos_;
 	if (page->pos_ > page->node_->get_num_entries() - 1) {
 		old_node = page->node_;
 		node = page->node_->get_right_sibling();
@@ -615,7 +618,7 @@ void QDAFN::update_page(	// update right node info
 		if (node != NULL) {
 			page->node_ = node;
 			page->pos_ = 0;
-			page_io_++;
+			++page_io_;
 		}
 		else {
 			page->node_ = NULL;
@@ -626,9 +629,9 @@ void QDAFN::update_page(	// update right node info
 }
 
 // -----------------------------------------------------------------------------
-float QDAFN::calc_dist(	// calc proj_dist
+inline float QDAFN::calc_dist(		// calc proj_dist
 	float proj_q,						// projection of query
-	const QDAFN_PageBuffer *page)			// page buffer
+	const QDAFN_PageBuffer *page)		// page buffer
 {
 	float key = page->node_->get_key(page->pos_);
 	return fabs(key - proj_q);

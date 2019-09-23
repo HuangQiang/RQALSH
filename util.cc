@@ -113,7 +113,7 @@ int write_data_new_form(			// write dataset with new format
 	int   d,							// dimensionality
 	int   B,							// page size
 	const float **data,					// data set
-	const char *out_path) 				// output path
+	const char  *out_path) 				// output path
 {
 	gettimeofday(&g_start_time, NULL);
 
@@ -273,8 +273,8 @@ inline void read_data_from_buffer(	// read data from buffer
 
 // -----------------------------------------------------------------------------
 int read_ground_truth(				// read ground truth results from disk
-	int qn,								// number of query objects
-	const char *fname,					// address of truth set
+	int    qn,							// number of query objects
+	const  char *fname,					// address of truth set
 	Result **R)							// ground truth results (return)
 {
 	gettimeofday(&g_start_time, NULL);
@@ -307,20 +307,33 @@ int read_ground_truth(				// read ground truth results from disk
 
 // -----------------------------------------------------------------------------
 float calc_l2_dist(					// calc L_2 norm (data type is float)
-	int dim,							// dimension
+	int   dim,							// dimension
 	const float *p1,					// 1st point
 	const float *p2)					// 2nd point
 {
 	float ret  = 0.0F;
-	for (int i = 0; i < dim; i++) {
+	for (int i = 0; i < dim; ++i) {
 		ret += SQR(p1[i] - p2[i]);
 	}
 	return sqrt(ret);
 }
 
 // -----------------------------------------------------------------------------
+float calc_inner_product(			// calc inner product (data type is float)
+	int   dim,							// dimension
+	const float *p1,					// 1st point
+	const float *p2)					// 2nd point
+{
+	float ret  = 0.0F;
+	for (int i = 0; i < dim; ++i) {
+		ret += p1[i] * p2[i];
+	}
+	return ret;
+}
+
+// -----------------------------------------------------------------------------
 float calc_recall(					// calc recall (percentage)
-	int  k,								// top-k value
+	int   k,							// top-k value
 	const Result *R,					// ground truth results 
 	MaxK_List *list)					// results returned by algorithms
 {
@@ -334,7 +347,7 @@ float calc_recall(					// calc recall (percentage)
 
 // -----------------------------------------------------------------------------
 float calc_recall(					// calc recall (percentage)
-	int k,								// top-k value
+	int   k,							// top-k value
 	const Result *R,					// ground truth results 
 	const Result *result)				// results returned by algorithms
 {
@@ -353,8 +366,8 @@ long long linear(					// linear scan search
 	int   B,							// page size
 	int   top_k,						// top-k value
 	const float *query,					// query object
-	const char *data_folder,			// data folder
-	MaxK_List *list)					// k-FN results (return)
+	const char  *data_folder,			// data folder
+	MaxK_List   *list)					// k-FN results (return)
 {
 	// -------------------------------------------------------------------------
 	//  calc <num> and <total_file>, where <num> is the number of data in one 

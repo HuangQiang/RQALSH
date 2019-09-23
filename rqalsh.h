@@ -16,8 +16,8 @@ struct PageBuffer {
 };
 
 // -----------------------------------------------------------------------------
-//  RQALSH is used to solve the problem of c-k-Approximate Furthest Neighbor 
-//  (c-k-AFN) search
+//  RQALSH: structure of RQALSH indexed by query-aware b+ tree. RQALSH is used 
+//  to solve the problem of c-Approximate Furthest Neighbor (c-AFN) search.
 // -----------------------------------------------------------------------------
 class RQALSH {
 public:
@@ -33,29 +33,29 @@ public:
 		float delta,					// error probability
 		float ratio,					// approximation ratio
 		const float **data,				// data objects
-		const char *index_path);		// index path
+		const char  *path);				// index path
 
 	// -------------------------------------------------------------------------
 	int load(						// load index
-		const char *index_path);		// index path
+		const char *path);				// index path
 
 	// -------------------------------------------------------------------------
 	void display();					// display parameters
 
 	// -------------------------------------------------------------------------
 	long long kfn(					// c-k-AFN search
-		int top_k,						// top-k value
+		int   top_k,					// top-k value
 		const float *query,				// query object
-		const char *data_folder,		// data folder
-		MaxK_List *list);				// k-FN results (return)
+		const char  *data_folder,		// data folder
+		MaxK_List   *list);				// k-FN results (return)
 	
 	// -------------------------------------------------------------------------
 	long long kfn(					// c-k-AFN search
-		int top_k,						// top-k value
+		int   top_k,					// top-k value
 		const float *query,				// query object
-		const int *object_id,			// object id mapping
-		const char *data_folder,		// data folder
-		MaxK_List *list);				// k-FN results (return)
+		const int   *object_id,			// object id mapping
+		const char  *data_folder,		// data folder
+		MaxK_List   *list);				// k-FN results (return)
 
 protected:
 	int   n_pts_;					// cardinality
@@ -64,7 +64,7 @@ protected:
 	float beta_;					// false positive percentage
 	float delta_;					// error probability
 	float appr_ratio_;				// approximation ratio
-	char  index_path_[300];			// folder path of index
+	char  path_[200];				// index path
 
 	float w_;						// bucket width
 	float p1_;						// positive probability
@@ -73,7 +73,7 @@ protected:
 	int   m_;						// number of hashtables
 	int   l_;						// collision threshold
 	float *a_array_;				// hash functions
-	QAB_Tree **trees_;					// b-trees
+	QAB_Tree **trees_;				// b-trees
 
 	int   dist_io_;					// io for computing distance
 	int   page_io_;					// io for scanning pages

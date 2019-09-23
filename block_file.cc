@@ -86,27 +86,11 @@ BlockFile::~BlockFile()				// destructor
 }
 
 // -----------------------------------------------------------------------------
-void BlockFile::fwrite_number(		// write an <int> value to bin file
-	int value)							// a value of type <int>
-{
-	put_bytes((char *) &value, SIZEINT);
-}
-
-// -----------------------------------------------------------------------------
-int BlockFile::fread_number() 		// read an <int> value from bin file
-{
-	char ca[SIZEINT];
-	get_bytes(ca, SIZEINT);
-
-	return *((int *)ca);
-}
-
-// -----------------------------------------------------------------------------
 //  note that this func does not read the header of blockfile. it fetches the 
 //  info in the first block excluding the header of blockfile.
 // -----------------------------------------------------------------------------
 void BlockFile::read_header(		// read remain bytes excluding header
-	char* buffer)						// contain remain bytes (return)
+	char *buffer)						// contain remain bytes (return)
 {
 	fseek(fp_, BFHEAD_LENGTH, SEEK_SET); // jump out of first 8 bytes
 	get_bytes(buffer, block_length_ - BFHEAD_LENGTH); // read remaining bytes
@@ -130,7 +114,7 @@ void BlockFile::read_header(		// read remain bytes excluding header
 //  info in the first block excluding the header of blockfile.
 // -----------------------------------------------------------------------------
 void BlockFile::set_header(			// set remain bytes excluding header
-	const char* buffer)					// contain remain bytes
+	const char *buffer)					// contain remain bytes
 {
 	fseek(fp_, BFHEAD_LENGTH, SEEK_SET); // jump out of first 8 bytes
 	put_bytes(buffer, block_length_ - BFHEAD_LENGTH); // write remain bytes
@@ -181,7 +165,7 @@ bool BlockFile::read_block(			// read a <block> from <index>
 	int index)							// pos of the block
 {
 	index++;						// extrnl block to intrnl block
-	assert(index > 0 && index <= num_blocks_);
+	// assert(index > 0 && index <= num_blocks_);
 	seek_block(index);
 
 	get_bytes(block, block_length_);
@@ -205,7 +189,7 @@ bool BlockFile::write_block(		// write a <block> into <index>
 	int index)							// position of the blocks
 {
 	index++;						// extrnl block to intrnl block
-	assert(index > 0 && index <= num_blocks_);
+	// assert(index > 0 && index <= num_blocks_);
 	seek_block(index);
 
 	put_bytes(block, block_length_);// write this block
@@ -228,7 +212,7 @@ int BlockFile::append_block(		// append new block at the end of file
 {
 	fseek(fp_, 0, SEEK_END);		// <fp_> point to the end of file
 	put_bytes(block, block_length_);// write a <block>
-	num_blocks_++;					// add 1 to <num_blocks_>
+	++num_blocks_;					// add 1 to <num_blocks_>
 	
 	fseek(fp_, SIZEINT, SEEK_SET);	// <fp_> point to pos of header
 	fwrite_number(num_blocks_);		// update <num_blocks_>

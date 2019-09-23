@@ -2,9 +2,9 @@
 
 
 // -----------------------------------------------------------------------------
-//  QAB_Tree: b-tree to index hash values produced by qalsh
+//  QAB_Tree: query-aware b-tree to index hash tables produced by rqalsh
 // -----------------------------------------------------------------------------
-QAB_Tree::QAB_Tree()						// constructor
+QAB_Tree::QAB_Tree()						// default constructor
 {
 	root_     = -1;
 	file_     = NULL;
@@ -86,80 +86,38 @@ void QAB_Tree::init_restore(			// load the tree from a tree file
 }
 
 // -----------------------------------------------------------------------------
-int QAB_Tree::read_header(				// read <root> from buffer
-	const char *buf)					// buffer
-{
-	memcpy(&root_, buf, SIZEINT);
-	return SIZEINT;
-}
-
-// -----------------------------------------------------------------------------
-int QAB_Tree::write_header(			// write <root> to buffer
-	char *buf)							// buffer (return)
-{
-	memcpy(buf, &root_, SIZEINT);
-	return SIZEINT;
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Tree::load_root()				// load <root_ptr> of b-tree
-{
-	if (root_ptr_ == NULL) {
-		root_ptr_ = new QAB_IndexNode();
-		root_ptr_->init_restore(this, root_);
-	}
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Tree::delete_root()			// delete <root_ptr>
-{
-	if (root_ptr_ != NULL) {
-		delete root_ptr_; root_ptr_ = NULL;
-	}
-}
-
-// -----------------------------------------------------------------------------
 int QAB_Tree::bulkload(				// bulkload a tree from memory
 	int   n,							// number of entries
-	const Result *hashtable)			// hash table
+	const Result *table)				// hash table
 {
-	QAB_IndexNode *index_child = NULL;
+	QAB_IndexNode *index_child   = NULL;
 	QAB_IndexNode *index_prev_nd = NULL;
-	QAB_IndexNode *index_act_nd = NULL;
+	QAB_IndexNode *index_act_nd  = NULL;
+	QAB_LeafNode  *leaf_child    = NULL;
+	QAB_LeafNode  *leaf_prev_nd  = NULL;
+	QAB_LeafNode  *leaf_act_nd   = NULL;
 
-	QAB_LeafNode *leaf_child = NULL;
-	QAB_LeafNode *leaf_prev_nd = NULL;
-	QAB_LeafNode *leaf_act_nd = NULL;
-
-	int   id = -1;
+	int   id    = -1;
 	int   block = -1;
-	float key = MINREAL;
-
-	bool first_node = false;		// determine relationship of sibling
-	int  start_block = -1;			// position of first node
-	int  end_block = -1;			// position of last node
-
-	int current_level = -1;			// current level (leaf level is 0)
-	int last_start_block = -1;		// to build b-tree level by level
-	int last_end_block = -1;		// to build b-tree level by level
+	float key   = MINREAL;
 
 	// -------------------------------------------------------------------------
 	//  build leaf node from <_hashtable> (level = 0)
 	// -------------------------------------------------------------------------
-	start_block = 0;
-	end_block = 0;
-	first_node = true;
+	bool first_node  = true;		// determine relationship of sibling
+	int  start_block = 0;			// position of first node
+	int  end_block   = 0;			// position of last node
 
 	for (int i = 0; i < n; ++i) {
-		id = hashtable[i].id_;
-		key = hashtable[i].key_;
+		id  = table[i].id_;
+		key = table[i].key_;
 
 		if (!leaf_act_nd) {
 			leaf_act_nd = new QAB_LeafNode();
 			leaf_act_nd->init(0, this);
 
 			if (first_node) {
-				first_node = false;	// init <start_block>
+				first_node  = false; // init <start_block>
 				start_block = leaf_act_nd->get_block();
 			}
 			else {					// label sibling
@@ -169,10 +127,10 @@ int QAB_Tree::bulkload(				// bulkload a tree from memory
 				delete leaf_prev_nd; leaf_prev_nd = NULL;
 			}
 			end_block = leaf_act_nd->get_block();
-		}							// add new entry
-		leaf_act_nd->add_new_child(id, key);
+		}
+		leaf_act_nd->add_new_child(id, key); // add new entry
 
-		if (leaf_act_nd->isFull()) {// change next node to store entries
+		if (leaf_act_nd->isFull()) { // change next node to store entries
 			leaf_prev_nd = leaf_act_nd;
 			leaf_act_nd = NULL;
 		}
@@ -187,9 +145,9 @@ int QAB_Tree::bulkload(				// bulkload a tree from memory
 	// -------------------------------------------------------------------------
 	//  stop condition: lastEndBlock == lastStartBlock (only one node, as root)
 	// -------------------------------------------------------------------------
-	current_level = 1;				// build the b-tree level by level
-	last_start_block = start_block;
-	last_end_block = end_block;
+	int current_level    = 1;		// current level (leaf level is 0)
+	int last_start_block = start_block;	// build b-tree level by level
+	int last_end_block   = end_block;	// build b-tree level by level
 
 	while (last_end_block > last_start_block) {
 		first_node = true;
@@ -225,45 +183,33 @@ int QAB_Tree::bulkload(				// bulkload a tree from memory
 					delete index_prev_nd; index_prev_nd = NULL;
 				}
 				end_block = index_act_nd->get_block();
-			}						// add new entry
-			index_act_nd->add_new_child(key, block);
+			}
+			index_act_nd->add_new_child(key, block); // add new entry
 
 			if (index_act_nd->isFull()) {
 				index_prev_nd = index_act_nd;
 				index_act_nd = NULL;
 			}
 		}
-		if (index_prev_nd != NULL) {// release the space
+		if (index_prev_nd != NULL) { // release the space
 			delete index_prev_nd; index_prev_nd = NULL;
 		}
 		if (index_act_nd != NULL) {
 			delete index_act_nd; index_act_nd = NULL;
 		}
 									
-		last_start_block = start_block;// update info
-		last_end_block = end_block;	// build b-tree of higher level
+		last_start_block = start_block; // update info
+		last_end_block   = end_block; // build b-tree of higher level
 		current_level++;
 	}
 	root_ = last_start_block;		// update the <root>
 
-	if (index_prev_nd != NULL) {
-		delete index_prev_nd; index_prev_nd = NULL;
-	}
-	if (index_act_nd != NULL) {
-		delete index_act_nd; index_act_nd = NULL;
-	}
-	if (index_child != NULL) {
-		delete index_child; index_child = NULL;
-	}
-	if (leaf_prev_nd != NULL) {
-		delete leaf_prev_nd; leaf_prev_nd = NULL;
-	}
-	if (leaf_act_nd != NULL) {
-		delete leaf_act_nd; leaf_act_nd = NULL;
-	}
-	if (leaf_child != NULL) {
-		delete leaf_child; leaf_child = NULL;
-	}
+	if (index_prev_nd != NULL) delete index_prev_nd; 
+	if (index_act_nd  != NULL) delete index_act_nd;
+	if (index_child   != NULL) delete index_child;
+	if (leaf_prev_nd  != NULL) delete leaf_prev_nd; 
+	if (leaf_act_nd   != NULL) delete leaf_act_nd; 	
+	if (leaf_child    != NULL) delete leaf_child; 
 
 	return 0;
 }

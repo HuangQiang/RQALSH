@@ -2,16 +2,15 @@
 
 
 // -----------------------------------------------------------------------------
-//  QAB_Node: basic structure of node in b-tree
+//  QAB_Node: query-aware node in query-aware b-tree
 // -----------------------------------------------------------------------------
-QAB_Node::QAB_Node()						// constructor
+QAB_Node::QAB_Node()				// default constructor
 {
 	level_         = -1;
 	num_entries_   = -1;
 	left_sibling_  = -1;
 	right_sibling_ = -1;
 	key_           = NULL;
-
 	block_         = -1;
 	capacity_      = -1;
 	dirty_         = false;
@@ -19,178 +18,86 @@ QAB_Node::QAB_Node()						// constructor
 }
 
 // -----------------------------------------------------------------------------
-QAB_Node::~QAB_Node()						// destructor
+QAB_Node::~QAB_Node()				// destructor
 {
 	key_   = NULL;
 	btree_ = NULL;
 }
 
 // -----------------------------------------------------------------------------
-void QAB_Node::init(					// init a new node, which not exist
+void QAB_Node::init(				// init a new node, which not exist
 	int   level,						// level (depth) in b-tree
-	QAB_Tree *btree)						// b-tree of this node
+	QAB_Tree *btree)					// b-tree of this node
 {
 	btree_         = btree;
 	level_         = (char) level;
-
 	dirty_         = true;
 	left_sibling_  = -1;
 	right_sibling_ = -1;
 	key_           = NULL;
-
 	num_entries_   = 0;
 	block_         = -1;
 	capacity_      = -1;
 }
 
 // -----------------------------------------------------------------------------
-void QAB_Node::init_restore(			// load an exist node from disk to init
-	QAB_Tree *btree,						// b-tree of this node
+void QAB_Node::init_restore(		// load an exist node from disk to init
+	QAB_Tree *btree,					// b-tree of this node
 	int   block)						// addr of disk for this node
 {
 	btree_         = btree;
 	block_         = block;
-
 	dirty_         = false;
 	left_sibling_  = -1;
 	right_sibling_ = -1;
 	key_           = NULL;
-
 	num_entries_   = 0;
 	level_         = -1;
 	capacity_      = -1;
 }
 
 // -----------------------------------------------------------------------------
-int QAB_Node::get_entry_size()			// get entry size of b-node
-{
-	return 0;						// return nothing
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Node::read_from_buffer(		// do nothing
-	const char *buf)
-{
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Node::write_to_buffer(		// do nothing
-	char *buf)
-{
-}
-
-// -----------------------------------------------------------------------------
-int QAB_Node::find_position_by_key(	// find pos just less than input key
-	float key)							// input key
-{
-	return -1;						// do nothing
-}
-
-// -----------------------------------------------------------------------------
-float QAB_Node::get_key(				// get <key> indexed by <index>
-	int index)							// input <index>
-{
-	return -1.0f;					// do nothing
-}
-
-// -----------------------------------------------------------------------------
-QAB_Node* QAB_Node::get_left_sibling()	// get the left-sibling node
+QAB_Node* QAB_Node::get_left_sibling() // get the left-sibling node
 {
 	QAB_Node *node = NULL;
 	if (left_sibling_ != -1) {		// left sibling node exist
-		node = new QAB_Node();			// read left-sibling from disk
+		node = new QAB_Node();		// read left-sibling from disk
 		node->init_restore(btree_, left_sibling_);
 	}
 	return node;
 }
 
 // -----------------------------------------------------------------------------
-QAB_Node* QAB_Node::get_right_sibling()	// get the right-sibling node
+QAB_Node* QAB_Node::get_right_sibling() // get the right-sibling node
 {
 	QAB_Node *node = NULL;
 	if (right_sibling_ != -1) {		// right sibling node exist
-		node = new QAB_Node();			// read right-sibling from disk
+		node = new QAB_Node();		// read right-sibling from disk
 		node->init_restore(btree_, right_sibling_);
 	}
 	return node;
 }
 
-// -----------------------------------------------------------------------------
-int QAB_Node::get_block()				// get <block_> (address of this node)
-{
-	return block_;
-}
 
 // -----------------------------------------------------------------------------
-int QAB_Node::get_num_entries()		// get <num_entries_>
-{
-	return num_entries_;
-}
-
+//  QAB_IndexNode: query-aware index node in query-aware b-tree
 // -----------------------------------------------------------------------------
-int QAB_Node::get_level()				// get <level_>
-{
-	return level_;
-}
-
-// -----------------------------------------------------------------------------
-//	<level>: SIZECHAR
-//	<num_entries> <left_sibling> and <right_sibling>: SIZEINT
-// -----------------------------------------------------------------------------
-int QAB_Node::get_header_size()		// get header size of b-node
-{
-	int header_size = SIZECHAR + SIZEINT * 3;
-	return header_size;
-}
-
-// -----------------------------------------------------------------------------
-float QAB_Node::get_key_of_node()		// get key of this node
-{
-	return key_[0];
-}
-
-// -----------------------------------------------------------------------------
-bool QAB_Node::isFull()				// whether is full?
-{
-	if (num_entries_ >= capacity_) return true;
-	else return false;
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Node::set_left_sibling(		// set addr of left sibling node
-	int left_sibling)					// addr of left sibling node
-{
-	left_sibling_ = left_sibling;
-}
-
-// -----------------------------------------------------------------------------
-void QAB_Node::set_right_sibling(		// set addr of right sibling node
-	int right_sibling)					// addr of right sibling node
-{
-	right_sibling_ = right_sibling;
-}
-
-// -----------------------------------------------------------------------------
-//  QAB_IndexNode: structure of index node for b-tree
-// -----------------------------------------------------------------------------
-QAB_IndexNode::QAB_IndexNode()			// constructor
+QAB_IndexNode::QAB_IndexNode()		// default constructor
 {
 	level_         = -1;
 	num_entries_   = -1;
 	left_sibling_  = -1;
 	right_sibling_ = -1;
-
 	block_         = -1;
 	capacity_      = -1;
 	dirty_         = false;
 	btree_         = NULL;
-
 	key_           = NULL;
 	son_           = NULL;
 }
 
 // -----------------------------------------------------------------------------
-QAB_IndexNode::~QAB_IndexNode()			// destructor
+QAB_IndexNode::~QAB_IndexNode()		// destructor
 {
 	if (dirty_) {					// if dirty, rewrite to disk
 		int  block_length = btree_->file_->get_blocklength();
@@ -210,9 +117,9 @@ QAB_IndexNode::~QAB_IndexNode()			// destructor
 }
 
 // -----------------------------------------------------------------------------
-void QAB_IndexNode::init(				// init a new node, which not exist
+void QAB_IndexNode::init(			// init a new node, which not exist
 	int   level,						// level (depth) in b-tree
-	QAB_Tree *btree)						// b-tree of this node
+	QAB_Tree *btree)					// b-tree of this node
 {
 	btree_         = btree;
 	level_         = (char) level;
@@ -230,10 +137,8 @@ void QAB_IndexNode::init(				// init a new node, which not exist
 
 	key_ = new float[capacity_];
 	son_ = new int[capacity_];
-	for (int i = 0; i < capacity_; ++i) {
-		key_[i] = MINREAL;
-		son_[i] = -1;
-	}
+	memset(key_, MINREAL, capacity_ * SIZEFLOAT);
+	memset(son_, -1,      capacity_ * SIZEINT);
 
 	char *blk = new char[b_length];	// init <block_>, get new addr
 	block_ = btree_->file_->append_block(blk);
@@ -241,8 +146,8 @@ void QAB_IndexNode::init(				// init a new node, which not exist
 }
 
 // -----------------------------------------------------------------------------
-void QAB_IndexNode::init_restore(		// load an exist node from disk to init
-	QAB_Tree *btree,						// b-tree of this node
+void QAB_IndexNode::init_restore(	// load an exist node from disk to init
+	QAB_Tree *btree,					// b-tree of this node
 	int   block)						// addr of disk for this node
 {
 	btree_ = btree;
@@ -258,10 +163,8 @@ void QAB_IndexNode::init_restore(		// load an exist node from disk to init
 
 	key_ = new float[capacity_];
 	son_ = new int[capacity_];
-	for (int i = 0; i < capacity_; ++i) {
-		key_[i] = MINREAL;
-		son_[i] = -1;
-	}
+	memset(key_, MINREAL, capacity_ * SIZEFLOAT);
+	memset(son_, -1,      capacity_ * SIZEINT);
 
 	// -------------------------------------------------------------------------
 	//  read the buffer <blk> to init <level_>, <num_entries_>, <left_sibling_>,
@@ -275,66 +178,37 @@ void QAB_IndexNode::init_restore(		// load an exist node from disk to init
 }
 
 // -----------------------------------------------------------------------------
-//  entry: <key_>: SIZEFLOAT and <son_>: SIZEINT
-// -----------------------------------------------------------------------------
-int QAB_IndexNode::get_entry_size()	// get entry size of b-node
-{
-	int entry_size = SIZEFLOAT + SIZEINT;
-	return entry_size;
-}
-
-// -----------------------------------------------------------------------------
 //  Read info from buffer to initialize <level_>, <num_entries_>,
 //  <left_sibling_>, <right_sibling_>, <key_> and <son_> of b-index node
 // -----------------------------------------------------------------------------
-void QAB_IndexNode::read_from_buffer(	// read a b-node from buffer
+void QAB_IndexNode::read_from_buffer( // read a b-node from buffer
 	const char *buf)					// store info of a b-index node
 {
 	int i = 0;
-	memcpy(&level_, &buf[i], SIZECHAR);
-	i += SIZECHAR;
-
-	memcpy(&num_entries_, &buf[i], SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&left_sibling_, &buf[i], SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&right_sibling_, &buf[i], SIZEINT);
-	i += SIZEINT;
+	memcpy(&level_,         &buf[i], SIZECHAR); i += SIZECHAR;
+	memcpy(&num_entries_,   &buf[i], SIZEINT);  i += SIZEINT;
+	memcpy(&left_sibling_,  &buf[i], SIZEINT);  i += SIZEINT;
+	memcpy(&right_sibling_, &buf[i], SIZEINT);  i += SIZEINT;
 
 	for (int j = 0; j < num_entries_; ++j) {
-		memcpy(&key_[j], &buf[i], SIZEFLOAT);
-		i += SIZEFLOAT;
-
-		memcpy(&son_[j], &buf[i], SIZEINT);
-		i += SIZEINT;
+		memcpy(&key_[j], &buf[i], SIZEFLOAT); i += SIZEFLOAT;
+		memcpy(&son_[j], &buf[i], SIZEINT);   i += SIZEINT;
 	}
 }
 
 // -----------------------------------------------------------------------------
-void QAB_IndexNode::write_to_buffer(	// write info of node into buffer
+void QAB_IndexNode::write_to_buffer( // write info of node into buffer
 	char *buf)							// store info of this node (return)
 {
 	int i = 0;
-	memcpy(&buf[i], &level_, SIZECHAR);
-	i += SIZECHAR;
-
-	memcpy(&buf[i], &num_entries_, SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&buf[i], &left_sibling_, SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&buf[i], &right_sibling_, SIZEINT);
-	i += SIZEINT;
+	memcpy(&buf[i], &level_,         SIZECHAR); i += SIZECHAR;
+	memcpy(&buf[i], &num_entries_,   SIZEINT);  i += SIZEINT;
+	memcpy(&buf[i], &left_sibling_,  SIZEINT);  i += SIZEINT;
+	memcpy(&buf[i], &right_sibling_, SIZEINT);  i += SIZEINT;
 
 	for (int j = 0; j < num_entries_; ++j) {
-		memcpy(&buf[i], &key_[j], SIZEFLOAT);
-		i += SIZEFLOAT;
-
-		memcpy(&buf[i], &son_[j], SIZEINT);
-		i += SIZEINT;
+		memcpy(&buf[i], &key_[j], SIZEFLOAT); i += SIZEFLOAT;
+		memcpy(&buf[i], &son_[j], SIZEINT);   i += SIZEINT;
 	}
 }
 
@@ -346,9 +220,6 @@ void QAB_IndexNode::write_to_buffer(	// write info of node into buffer
 int QAB_IndexNode::find_position_by_key(
 	float key)							// input key
 {
-	// -------------------------------------------------------------------------
-	//  linear scan (right to left)
-	// -------------------------------------------------------------------------
 	int pos = -1;
 	for (int i = num_entries_ - 1; i >= 0; --i) {
 		if (key_[i] <= key) {
@@ -357,14 +228,6 @@ int QAB_IndexNode::find_position_by_key(
 		}
 	}
 	return pos;
-}
-
-// -----------------------------------------------------------------------------
-float QAB_IndexNode::get_key(			// get <key> indexed by <index>
-	int index)							// input index
-{
-	assert(index >= 0 && index < num_entries_);
-	return key_[index];
 }
 
 // -----------------------------------------------------------------------------
@@ -394,15 +257,7 @@ QAB_IndexNode* QAB_IndexNode::get_right_sibling()
 }
 
 // -----------------------------------------------------------------------------
-int QAB_IndexNode::get_son(			// get son indexed by <index>
-	int index)							// input index
-{
-	assert(index >= 0 && index < num_entries_);
-	return son_[index];
-}
-
-// -----------------------------------------------------------------------------
-void QAB_IndexNode::add_new_child(		// add a new entry from its child node
+void QAB_IndexNode::add_new_child(	// add a new entry from its child node
 	float key,							// input key
 	int   son)							// input son
 {
@@ -410,25 +265,24 @@ void QAB_IndexNode::add_new_child(		// add a new entry from its child node
 	key_[num_entries_] = key;		// add new entry into its pos
 	son_[num_entries_] = son;
 
-	num_entries_++;					// update <num_entries_>
+	++num_entries_;					// update <num_entries_>
 	dirty_ = true;					// node modified, <dirty_> is true
 }
 
+
 // -----------------------------------------------------------------------------
-//  QAB_LeafNode: structure of leaf node in b-tree
+//  QAB_LeafNode: query-aware leaf node in query-aware b-tree
 // -----------------------------------------------------------------------------
-QAB_LeafNode::QAB_LeafNode()				// constructor
+QAB_LeafNode::QAB_LeafNode()		// default constructor
 {
 	level_         = -1;
 	num_entries_   = -1;
 	left_sibling_  = -1;
 	right_sibling_ = -1;
-
 	block_         = -1;
 	capacity_      = -1;
 	dirty_         = false;
 	btree_         = NULL;
-
 	num_keys_      = -1;
 	capacity_keys_ = -1;
 	key_           = NULL;
@@ -436,7 +290,7 @@ QAB_LeafNode::QAB_LeafNode()				// constructor
 }
 
 // -----------------------------------------------------------------------------
-QAB_LeafNode::~QAB_LeafNode()				// destructor
+QAB_LeafNode::~QAB_LeafNode()		// destructor
 {
 	if (dirty_) {					// if dirty, rewrite to disk
 		int  block_length = btree_->file_->get_blocklength();
@@ -456,9 +310,9 @@ QAB_LeafNode::~QAB_LeafNode()				// destructor
 }
 
 // -----------------------------------------------------------------------------
-void QAB_LeafNode::init(				// init a new node, which not exist
+void QAB_LeafNode::init(			// init a new node, which not exist
 	int   level,						// level (depth) in b-tree
-	QAB_Tree *btree)						// b-tree of this node
+	QAB_Tree *btree)					// b-tree of this node
 {
 	btree_         = btree;
 	level_         = (char) level;
@@ -476,7 +330,7 @@ void QAB_LeafNode::init(				// init a new node, which not exist
 	int key_size = get_key_size(b_length);
 
 	key_ = new float[capacity_keys_];
-	for (int i = 0; i < capacity_keys_; ++i) key_[i] = MINREAL;
+	memset(key_, MINREAL, capacity_keys_ * SIZEFLOAT);
 	
 	int header_size = get_header_size();
 	int entry_size = get_entry_size();
@@ -487,7 +341,7 @@ void QAB_LeafNode::init(				// init a new node, which not exist
 		exit(1);
 	}
 	id_ = new int[capacity_];
-	for (int i = 0; i < capacity_; ++i) id_[i] = -1;
+	memset(id_, -1, capacity_ * SIZEINT);
 
 	char *blk = new char[b_length];
 	block_ = btree_->file_->append_block(blk);
@@ -495,8 +349,8 @@ void QAB_LeafNode::init(				// init a new node, which not exist
 }
 
 // -----------------------------------------------------------------------------
-void QAB_LeafNode::init_restore(		// load an exist node from disk to init
-	QAB_Tree *btree,						// b-tree of this node
+void QAB_LeafNode::init_restore(	// load an exist node from disk to init
+	QAB_Tree *btree,					// b-tree of this node
 	int   block)						// addr of disk for this node
 {
 	btree_ = btree;
@@ -510,7 +364,7 @@ void QAB_LeafNode::init_restore(		// load an exist node from disk to init
 	int key_size = get_key_size(b_length);
 
 	key_ = new float[capacity_keys_];
-	for (int i = 0; i < capacity_keys_; ++i) key_[i] = MINREAL;
+	memset(key_, MINREAL, capacity_keys_ * SIZEFLOAT);
 	
 	int header_size = get_header_size();
 	int entry_size = get_entry_size();
@@ -521,7 +375,7 @@ void QAB_LeafNode::init_restore(		// load an exist node from disk to init
 		exit(1);
 	}
 	id_ = new int[capacity_];
-	for (int i = 0; i < capacity_; ++i) id_[i] = -1;
+	memset(id_, -1, capacity_ * SIZEINT);
 
 	// -------------------------------------------------------------------------
 	//  read the buffer <blk> to init <level_>, <num_entries_>, <left_sibling_>,
@@ -535,48 +389,27 @@ void QAB_LeafNode::init_restore(		// load an exist node from disk to init
 }
 
 // -----------------------------------------------------------------------------
-int QAB_LeafNode::get_entry_size()		// get entry size in b-node
-{
-	return SIZEINT;						// <id>: sizeof(int)
-}
-
-// -----------------------------------------------------------------------------
-void QAB_LeafNode::read_from_buffer(	// read a b-node from buffer
+void QAB_LeafNode::read_from_buffer( // read a b-node from buffer
 	const char *buf)					// store info of a b-node
 {
 	int i = 0;
 	// -------------------------------------------------------------------------
 	//  read header: <level_> <num_entries_> <left_sibling_> <right_sibling_>
 	// -------------------------------------------------------------------------
-	memcpy(&level_, &buf[i], SIZECHAR);
-	i += SIZECHAR;
-
-	memcpy(&num_entries_, &buf[i], SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&left_sibling_, &buf[i], SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&right_sibling_, &buf[i], SIZEINT);
-	i += SIZEINT;
+	memcpy(&level_,         &buf[i], SIZECHAR); i += SIZECHAR;
+	memcpy(&num_entries_,   &buf[i], SIZEINT);  i += SIZEINT;
+	memcpy(&left_sibling_,  &buf[i], SIZEINT);  i += SIZEINT;
+	memcpy(&right_sibling_, &buf[i], SIZEINT);  i += SIZEINT;
 
 	// -------------------------------------------------------------------------
-	//  read keys: <num_keys_> and <key_>
+	//  read keys: <num_keys_> and <key_> and entries: <id_>
 	// -------------------------------------------------------------------------
-	memcpy(&num_keys_, &buf[i], SIZEINT);
-	i += SIZEINT;
-
+	memcpy(&num_keys_, &buf[i], SIZEINT); i += SIZEINT;
 	for (int j = 0; j < capacity_keys_; ++j) {
-		memcpy(&key_[j], &buf[i], SIZEFLOAT);
-		i += SIZEFLOAT;
+		memcpy(&key_[j], &buf[i], SIZEFLOAT); i += SIZEFLOAT;
 	}
-
-	// -------------------------------------------------------------------------
-	//  read entries: <id_>
-	// -------------------------------------------------------------------------
 	for (int j = 0; j < num_entries_; ++j) {
-		memcpy(&id_[j], &buf[i], SIZEINT);
-		i += SIZEINT;
+		memcpy(&id_[j], &buf[i], SIZEINT); i += SIZEINT;
 	}
 }
 
@@ -588,35 +421,20 @@ void QAB_LeafNode::write_to_buffer(	// write a b-node into buffer
 	// -------------------------------------------------------------------------
 	//  write header: <level_> <num_entries_> <left_sibling_> <right_sibling_>
 	// -------------------------------------------------------------------------
-	memcpy(&buf[i], &level_, SIZECHAR);
-	i += SIZECHAR;
-
-	memcpy(&buf[i], &num_entries_, SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&buf[i], &left_sibling_, SIZEINT);
-	i += SIZEINT;
-
-	memcpy(&buf[i], &right_sibling_, SIZEINT);
-	i += SIZEINT;
+	memcpy(&buf[i], &level_,         SIZECHAR); i += SIZECHAR;
+	memcpy(&buf[i], &num_entries_,   SIZEINT);  i += SIZEINT;
+	memcpy(&buf[i], &left_sibling_,  SIZEINT);  i += SIZEINT;
+	memcpy(&buf[i], &right_sibling_, SIZEINT);  i += SIZEINT;
 
 	// -------------------------------------------------------------------------
-	//  write keys: <num_keys_> and <key_>
+	//  write keys: <num_keys_> and <key_> and entries: <id_>
 	// -------------------------------------------------------------------------
-	memcpy(&buf[i], &num_keys_, SIZEINT);
-	i += SIZEINT;
-
+	memcpy(&buf[i], &num_keys_, SIZEINT); i += SIZEINT;
 	for (int j = 0; j < capacity_keys_; ++j) {
-		memcpy(&buf[i], &key_[j], SIZEFLOAT);
-		i += SIZEFLOAT;
+		memcpy(&buf[i], &key_[j], SIZEFLOAT); i += SIZEFLOAT;
 	}
-
-	// -------------------------------------------------------------------------
-	//  write entries: <id_>
-	// -------------------------------------------------------------------------
 	for (int j = 0; j < num_entries_; ++j) {
-		memcpy(&buf[i], &id_[j], SIZEINT);
-		i += SIZEINT;
+		memcpy(&buf[i], &id_[j], SIZEINT); i += SIZEINT;
 	}
 }
 
@@ -624,9 +442,6 @@ void QAB_LeafNode::write_to_buffer(	// write a b-node into buffer
 int QAB_LeafNode::find_position_by_key(// find pos just less than input key
 	float key)							// input key
 {
-	// -------------------------------------------------------------------------
-	//  linear scan (right to left)
-	// -------------------------------------------------------------------------
 	int pos = -1;							
 	for (int i = num_keys_ - 1; i >= 0; --i) {
 		if (key_[i] <= key) {
@@ -635,14 +450,6 @@ int QAB_LeafNode::find_position_by_key(// find pos just less than input key
 		}
 	}
 	return pos;
-}
-
-// -----------------------------------------------------------------------------
-float QAB_LeafNode::get_key(			// get <key_> indexed by <index>
-	int index)							// input <index>
-{
-	assert(index >= 0 && index < num_keys_);
-	return key_[index];
 }
 
 // -----------------------------------------------------------------------------
@@ -668,47 +475,11 @@ QAB_LeafNode* QAB_LeafNode::get_right_sibling() // get right sibling node
 }
 
 // -----------------------------------------------------------------------------
-int QAB_LeafNode::get_key_size(		// get key size of this node
-	int _block_length)					// block length
-{
-	capacity_keys_ = (int) ceil((float) _block_length / LEAF_NODE_SIZE);
-
-	// -------------------------------------------------------------------------
-	//  array of <key_> with number <capacity_keys_> + <number_keys_> (SIZEINT)
-	// -------------------------------------------------------------------------
-	int key_size = capacity_keys_ * SIZEFLOAT + SIZEINT;
-	return key_size;
-}
-
-// -----------------------------------------------------------------------------
-int QAB_LeafNode::get_increment()		// get <increment>
-{
-	int entry_size = get_entry_size();
-	int increment = LEAF_NODE_SIZE / entry_size;
-
-	return increment;
-}
-
-// -----------------------------------------------------------------------------
-int QAB_LeafNode::get_num_keys()		// get <num_keys_>
-{
-	return num_keys_;
-}
-
-// -----------------------------------------------------------------------------
-int QAB_LeafNode::get_entry_id(		// get entry id indexed by <index>
-	int index)							// input <index>
-{
-	assert(index >= 0 && index < num_entries_);
-	return id_[index];
-}
-
-// -----------------------------------------------------------------------------
-void QAB_LeafNode::add_new_child(		// add new child by input id and key
+void QAB_LeafNode::add_new_child(	// add new child by input id and key
 	int   id,							// input object id
 	float key)							// input key
 {
-	assert(num_entries_ < capacity_);
+	// assert(num_entries_ < capacity_);
 
 	id_[num_entries_] = id;			// add new id into its pos
 	if ((num_entries_ * SIZEINT) % LEAF_NODE_SIZE == 0) {
@@ -716,6 +487,6 @@ void QAB_LeafNode::add_new_child(		// add new child by input id and key
 		key_[num_keys_] = key;		// add new key into its pos
 		num_keys_++;				// update <num_keys>
 	}
-	num_entries_++;					// update <num_entries>
+	++num_entries_;					// update <num_entries>
 	dirty_ = true;					// node modified, <dirty> is true
 }
