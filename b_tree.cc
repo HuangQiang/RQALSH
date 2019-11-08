@@ -1,5 +1,12 @@
-#include "headers.h"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
 
+#include "def.h"
+#include "util.h"
+#include "block_file.h"
+#include "b_node.h"
+#include "b_tree.h"
 
 // -----------------------------------------------------------------------------
 //  B_Tree: structure to index the projection produced by QDAFN
@@ -139,7 +146,7 @@ int B_Tree::bulkload(				// bulkload b-tree
 	// -------------------------------------------------------------------------
 	//  Stop consition: lastEndBlock == lastStartBlock (only one node, as root)
 	// -------------------------------------------------------------------------
-	vector<float> vec;				// store the key of node
+	std::vector<float> vec;			// store the key of node
 	vec.push_back(0.0);				// address of b-node starts from 1
 									// node 0 store the header info of b-tree
 

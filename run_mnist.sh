@@ -27,8 +27,10 @@ dFolder=data/${dname}/
 # ------------------------------------------------------------------------------
 beta=100
 delta=0.49
-L_list=(1500 1000 750 600 500 300 200 150 100 75 60 50 40 30 20 15 10 6 5 4 3 2) 
-M_list=(2 3 4 5 6 10 15 20 30 40 50 60 75 100 150 200 300 500 600 750 1000 1500)
+L_list=(1500) 
+M_list=(2)
+# L_list=(1500 1000 750 600 500 300 200 150 100 75 60 50 40 30 20 15 10 6 5 4 3 2) 
+# M_list=(2 3 4 5 6 10 15 20 30 40 50 60 75 100 150 200 300 500 600 750 1000 1500)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -90,25 +92,25 @@ oFolder=${rPath}/qdafn/guarantee/
 ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
     -df ${dFolder} -of ${oFolder}
 
-# ------------------------------------------------------------------------------
-#  QDAFN (Heuristic mode)
-# ------------------------------------------------------------------------------
-proj=10
-for ((i=2; i<=10; i=i+1))
-do
-    proj=$(($proj + 10))
-    cand=$((273 - $proj))	
-    for ((j=1; j<=5; j=j+1))
-    do
-        oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
+# # ------------------------------------------------------------------------------
+# #  QDAFN (Heuristic mode)
+# # ------------------------------------------------------------------------------
+# proj=10
+# for ((i=2; i<=10; i=i+1))
+# do
+#     proj=$(($proj + 10))
+#     cand=$((273 - $proj))	
+#     for ((j=1; j<=5; j=j+1))
+#     do
+#         oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
 
-        ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
-            -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
+#         ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
+#             -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
       
-        ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
-            -df ${dFolder} -of ${oFolder}
-    done
-done
+#         ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
+#             -df ${dFolder} -of ${oFolder}
+#     done
+# done
 
 # ------------------------------------------------------------------------------
 #  Linear Scan

@@ -1,4 +1,16 @@
-#include "headers.h"
+#include <algorithm>
+#include <cstring>
+#include <sys/time.h>
+
+#include "def.h"
+#include "util.h"
+#include "pri_queue.h"
+#include "qdafn.h"
+#include "drusilla_select.h"
+#include "rqalsh.h"
+#include "rqalsh_star.h"
+#include "afn.h"
+
 
 // -----------------------------------------------------------------------------
 int linear_scan(					// brute-force linear scan (data in disk)

@@ -1,6 +1,8 @@
 #ifndef __DRUSILLA_SELECT_H
 #define __DRUSILLA_SELECT_H
 
+class MaxK_List;
+
 // -----------------------------------------------------------------------------
 //  Drusilla_Select: data structure of Drusilla_Select for c-k-AFN search
 // -----------------------------------------------------------------------------

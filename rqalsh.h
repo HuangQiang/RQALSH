@@ -2,6 +2,7 @@
 #define __RQALSH_H
 
 class QAB_Node;
+class QAB_LeafNode;
 class QAB_Tree;
 class MaxK_List;
 

@@ -1,4 +1,10 @@
-#include "headers.h"
+#include <algorithm>
+#include <cstring>
+
+#include "def.h"
+#include "util.h"
+#include "afn.h"
+
 
 // -----------------------------------------------------------------------------
 void usage() 						// display usage of the package

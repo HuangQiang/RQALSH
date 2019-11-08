@@ -1,4 +1,15 @@
-#include "headers.h"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <queue>
+
+#include "def.h"
+#include "util.h"
+#include "random.h"
+#include "pri_queue.h"
+#include "b_node.h"
+#include "b_tree.h"
+#include "qdafn.h"
 
 // -----------------------------------------------------------------------------
 //  Ziggurat Method standard normal pseudorandom number generator code from 
@@ -410,7 +421,7 @@ long long QDAFN::int_search(		// internal search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	priority_queue<Result, vector<Result>, Cmp> pri_queue;
+	std::priority_queue<Result, std::vector<Result>, Cmp> pri_queue;
 	Result q_item;
 	for (int i = 0; i < l_; ++i) {
 		q_item.key_ = fabs(table_[i][next[i]].key_ - proj_q[i]);
@@ -499,7 +510,7 @@ long long QDAFN::ext_search(		// external search
 	// -------------------------------------------------------------------------
 	//  c-k-AFN search
 	// -------------------------------------------------------------------------
-	priority_queue<Result, vector<Result>, Cmp> pri_queue;
+	std::priority_queue<Result, std::vector<Result>, Cmp> pri_queue;
 	Result q_item;
 	for (int i = 0; i < l_; ++i) {
 		if (page[i].node_) {

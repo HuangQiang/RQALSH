@@ -1,9 +1,9 @@
 #ifndef __B_TREE_H
 #define __B_TREE_H
 
+struct Result;
 class  BlockFile;
 class  B_Node;
-struct Result;
 
 // -----------------------------------------------------------------------------
 //  B_Tree: structure to index the projection produced by QDAFN

@@ -1,4 +1,10 @@
-#include "headers.h"
+#include <algorithm>
+#include <cstring>
+
+#include "def.h"
+#include "util.h"
+#include "pri_queue.h"
+#include "drusilla_select.h"
 
 // -----------------------------------------------------------------------------
 Drusilla_Select::Drusilla_Select()	// default constructor
@@ -59,7 +65,7 @@ int Drusilla_Select::bulkload(		// build hash tables
 	// -------------------------------------------------------------------------
 	//  calculate centroid
 	// -------------------------------------------------------------------------
-	vector<float> centroid(dim_, 0.0f);
+	std::vector<float> centroid(dim_, 0.0f);
 	for (int i = 0; i < n_pts_; ++i) {
 		for (int j = 0; j < dim_; ++j) {
 			centroid[j] += data[i][j];
@@ -85,7 +91,7 @@ int Drusilla_Select::bulkload(		// build hash tables
 	// -------------------------------------------------------------------------
 	int   max_id = -1;
 	float max_norm = -1.0f;
-	vector<float> norm(n_pts_, 0.0f);
+	std::vector<float> norm(n_pts_, 0.0f);
 
 	for (int i = 0; i < n_pts_; ++i) {
 		norm[i] = sqrt(calc_inner_product(dim_, shift_data[i], shift_data[i]));
@@ -95,7 +101,7 @@ int Drusilla_Select::bulkload(		// build hash tables
 		}
 	}
 
-	vector<bool>  close_angle(n_pts_, false);
+	std::vector<bool> close_angle(n_pts_, false);
 	Result *score = new Result[n_pts_];
 	float  *proj  = new float[dim_];
 

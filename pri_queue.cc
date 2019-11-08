@@ -1,4 +1,8 @@
-#include "headers.h"
+#include <algorithm>
+
+#include "def.h"
+#include "util.h"
+#include "pri_queue.h"
 
 
 // -----------------------------------------------------------------------------

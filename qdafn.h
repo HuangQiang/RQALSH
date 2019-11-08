@@ -1,9 +1,11 @@
 #ifndef __QDAFN_H
 #define __QDAFN_H
 
+struct Result;
 class  B_Node;
 class  B_Tree;
-struct Result;
+class  MaxK_List;
+
 
 // -----------------------------------------------------------------------------
 struct Cmp {						// cmp func for priority
