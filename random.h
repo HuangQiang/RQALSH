@@ -1,6 +1,12 @@
 #ifndef __RANDOM_H
 #define __RANDOM_H
 
+#include <iostream>
+#include <algorithm>
+#include <cmath>
+
+#include "def.h"
+
 // -----------------------------------------------------------------------------
 //  functions used for generating random variables (r.v.)
 // -----------------------------------------------------------------------------

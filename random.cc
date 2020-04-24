@@ -1,8 +1,4 @@
-#include <algorithm>
-
-#include "def.h"
 #include "random.h"
-
 
 // -----------------------------------------------------------------------------
 //  use Box-Muller transform to generate a r.v. from Gaussian(mean, sigma)

@@ -1,6 +1,17 @@
 #ifndef __QAB_NODE_H
 #define __QAB_NODE_H
 
+#include <iostream>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+
+#include "def.h"
+#include "util.h"
+#include "block_file.h"
+#include "qab_tree.h"
+
 class BlockFile;
 class QAB_Tree;
 

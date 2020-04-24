@@ -1,11 +1,3 @@
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-
-#include "def.h"
-#include "util.h"
-#include "block_file.h"
-#include "b_node.h"
 #include "b_tree.h"
 
 // -----------------------------------------------------------------------------

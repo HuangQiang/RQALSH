@@ -1,13 +1,4 @@
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-
-#include "def.h"
-#include "util.h"
-#include "block_file.h"
-#include "qab_node.h"
 #include "qab_tree.h"
-
 
 // -----------------------------------------------------------------------------
 //  QAB_Tree: query-aware b-tree to index hash tables produced by rqalsh
@@ -220,4 +211,19 @@ int QAB_Tree::bulkload(				// bulkload a tree from memory
 	if (leaf_child    != NULL) delete leaf_child; 
 
 	return 0;
+}
+
+// -----------------------------------------------------------------------------
+void QAB_Tree::load_root()			// load root of b-tree
+{
+	if (root_ptr_ == NULL) {
+		root_ptr_ = new QAB_IndexNode();
+		root_ptr_->init_restore(this, root_);
+	}
+}
+
+// -----------------------------------------------------------------------------
+void QAB_Tree::delete_root()		// delete root of b-tree
+{
+	if (root_ptr_ != NULL) { delete root_ptr_; root_ptr_ = NULL; }
 }

@@ -1,17 +1,29 @@
 #ifndef __RQALSH_STAR_H
 #define __RQALSH_STAR_H
 
+#include <iostream>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <vector>
+
+#include "def.h"
+#include "util.h"
+#include "random.h"
+#include "pri_queue.h"
+#include "rqalsh.h"
+
 class RQALSH;
 class MaxK_List;
 
 // -----------------------------------------------------------------------------
-//  RQALSH* is used to solve the problem of c-k-Approximate Furthest Neighbor 
-//  (c-k-AFN) search
+//  RQALSH* is used for c-k-Approximate Furthest Neighbor (c-k-AFN) search
 // -----------------------------------------------------------------------------
-class RQALSH_Star {
+class RQALSH_STAR {
 public:
-	RQALSH_Star();					// default constructor
-	~RQALSH_Star();					// destructor
+	RQALSH_STAR();					// default constructor
+	~RQALSH_STAR();					// destructor
 
 	// -------------------------------------------------------------------------
 	int build(						// build index		
@@ -34,7 +46,7 @@ public:
 	void display();			        // display parameters
 
 	// -------------------------------------------------------------------------
-	long long kfn(					// c-k-AFN search
+	uint64_t kfn(					// c-k-AFN search
 		int   top_k,					// top-k value
 		const float *query,				// query objects
 		const char  *data_folder,		// data folder
@@ -46,33 +58,22 @@ protected:
 	int    B_;						// page size
 	int    L_;						// number of projection
 	int    M_;						// number of candidates
-	int    beta_;                   // false positive percentage
-    float  delta_;                  // error probability
-    float  appr_ratio_;				// approximation ratio
 	char   path_[200];				// index path
-
-	int    n_cand_;					// number of candidates
-	int    *cand_;				    // cadidate objects id
+	int    *cand_;				    // candidate id
 	RQALSH *lsh_;					// index of sample data objects
 
-    // -------------------------------------------------------------------------
-	int bulkload(					// bulkloading
-		const float **data);			// data objects
+	// -------------------------------------------------------------------------
+	void data_dependent_select(		// data dependent selection
+		const float **data,				// data objects
+		int  *cand);					// candidate id (return)
 
 	// -------------------------------------------------------------------------
-	int calc_shift_data(			// calc shift data
-		const float **data,  			// data objects
-		float **shift_data);  			// shift data objects (return)
-
-	// -------------------------------------------------------------------------
-	int data_dependent_select(		// data dependent selection
-		const float **shift_data);		// shift data objects
-
-	// -------------------------------------------------------------------------
-	int write_params();				// write parameters to disk
-
-	// -------------------------------------------------------------------------
-	int read_params();				// read parameters from disk
+	void calc_shift_data(			// calculate shift data objects
+		const float **data,				// data objects
+		int   &max_id,					// data id with max l2-norm (return)
+		float &max_norm,				// max l2-norm (return)
+		float *norm,					// l2-norm of shift data (return)
+		float **shift_data); 			// shift data (return)
 }; 
 
 #endif // __RQALSH_STAR_H

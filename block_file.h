@@ -1,6 +1,15 @@
 #ifndef __BLOCK_FILE_H
 #define __BLOCK_FILE_H
 
+#include <iostream>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+
+#include "def.h"
+#include "util.h"
+
 // -----------------------------------------------------------------------------
 //  NOTE: The author of the implementation of class BlockFile is Yufei Tao.
 //  Modified by Qiang HUANG

@@ -1,6 +1,23 @@
 #ifndef __AFN_H
 #define __AFN_H
 
+#include <iostream>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <sys/time.h>
+
+#include "def.h"
+#include "util.h"
+#include "pri_queue.h"
+#include "qdafn.h"
+#include "drusilla_select.h"
+#include "rqalsh.h"
+#include "rqalsh_star.h"
+
+struct Result;
+
 // -----------------------------------------------------------------------------
 int linear_scan(					// brute-force linear scan (data in disk)
 	int   n,							// number of data objects

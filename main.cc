@@ -1,13 +1,15 @@
+#include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstring>
 
 #include "def.h"
 #include "util.h"
 #include "afn.h"
 
-
 // -----------------------------------------------------------------------------
-void usage() 						// display usage of the package
+void usage() 						// usage of the package
 {
 	printf("\n"
 		"--------------------------------------------------------------------\n"
@@ -71,7 +73,7 @@ void usage() 						// display usage of the package
 // -----------------------------------------------------------------------------
 int main(int nargs, char** args)
 {
-	srand(6);						// srand((unsigned)time(NULL));
+	srand(6); 						//srand((unsigned)time(NULL)); 	//
 	// usage();
 
 	char   data_set[200];			// address of data  set
@@ -225,7 +227,7 @@ int main(int nargs, char** args)
 	if (alg == 0 || alg == 1 || alg == 3 || alg == 5 || alg == 7) {
 		data = new float*[n];
 		for (int i = 0; i < n; ++i) data[i] = new float[d];
-		if (read_data(n, d, data_set, data) == 1) return 1;
+		if (read_bin_data(n, d, data_set, data) == 1) return 1;
 
 		if (alg == 1 || alg == 3 || alg == 5 || alg == 7) {
 			write_data_new_form(n, d, B, (const float **) data, data_folder);
@@ -235,7 +237,7 @@ int main(int nargs, char** args)
 	if (alg == 0 || alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
 		query = new float*[qn];
 		for (int i = 0; i < qn; ++i) query[i] = new float[d];
-		if (read_data(qn, d, query_set, query) == 1) return 1;
+		if (read_bin_data(qn, d, query_set, query) == 1) return 1;
 	}
 
 	if (alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
@@ -298,27 +300,17 @@ int main(int nargs, char** args)
 	//  release space
 	// -------------------------------------------------------------------------
 	if (alg == 0 || alg == 1 || alg == 3 || alg == 5 || alg == 7) {
-		for (int i = 0; i < n; ++i) {
-			delete[] data[i]; data[i] = NULL;
-		}
+		for (int i = 0; i < n; ++i) { delete[] data[i]; data[i] = NULL; }
 		delete[] data; data  = NULL;
 	}
-
 	if (alg == 0 || alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
-		for (int i = 0; i < qn; ++i) {
-			delete[] query[i]; query[i] = NULL;
-		}
+		for (int i = 0; i < qn; ++i) { delete[] query[i]; query[i] = NULL; }
 		delete[] query; query = NULL;
 	}
-
 	if (alg == 2 || alg == 4 || alg == 6 || alg == 8 || alg == 9) {
-		for (int i = 0; i < qn; ++i) {
-			delete[] R[i]; R[i] = NULL;
-		}
+		for (int i = 0; i < qn; ++i) { delete[] R[i]; R[i] = NULL; }
 		delete[] R; R = NULL;
 	}
 
 	return 0;
 }
-
-

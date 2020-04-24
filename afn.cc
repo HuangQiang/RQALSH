@@ -1,16 +1,4 @@
-#include <algorithm>
-#include <cstring>
-#include <sys/time.h>
-
-#include "def.h"
-#include "util.h"
-#include "pri_queue.h"
-#include "qdafn.h"
-#include "drusilla_select.h"
-#include "rqalsh.h"
-#include "rqalsh_star.h"
 #include "afn.h"
-
 
 // -----------------------------------------------------------------------------
 int linear_scan(					// brute-force linear scan (data in disk)
@@ -24,14 +12,10 @@ int linear_scan(					// brute-force linear scan (data in disk)
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "linear.out");
+	strcpy(output_set, output_folder); strcat(output_set, "linear.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  k-FN search by Linear Scan
@@ -93,30 +77,34 @@ int indexing_of_rqalsh_star(		// indexing of RQALSH*
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	sprintf(output_set, "%srqalsh_star.out", output_folder);
+	strcpy(output_set, output_folder); strcat(output_set, "rqalsh_star.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  indexing of RQALSH*
 	// -------------------------------------------------------------------------
 	gettimeofday(&g_start_time, NULL);
-	RQALSH_Star *lsh = new RQALSH_Star();
+	RQALSH_STAR *lsh = new RQALSH_STAR();
 	lsh->build(n, d, B, L, M, beta, delta, ratio, data, output_folder);
 	lsh->display();
 
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
 		(g_end_time.tv_usec - g_start_time.tv_usec) / 1000000.0f;
-	printf("Indexing Time: %f Seconds\n\n", indexing_time);
-	fprintf(fp, "Indexing Time = %f Seconds\n\n", indexing_time);
+	printf("Indexing Time = %f Seconds\n", indexing_time);
+	printf("Memory = %f MB\n\n", g_memory / 1048576.0f);
+	
+	fprintf(fp, "index_time = %f Seconds\n", indexing_time);
+	fprintf(fp, "memory     = %f MB\n\n", g_memory / 1048576.0f);
 	fclose(fp);
 
+	// -------------------------------------------------------------------------
+	//  release space
+	// -------------------------------------------------------------------------
 	delete lsh; lsh = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -131,18 +119,15 @@ int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH*
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	sprintf(output_set, "%srqalsh_star.out", output_folder);
+	strcpy(output_set, output_folder); strcat(output_set, "rqalsh_star.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  load RQALSH*
 	// -------------------------------------------------------------------------
-	RQALSH_Star *lsh = new RQALSH_Star();
+	RQALSH_STAR *lsh = new RQALSH_STAR();
 	if (lsh->load(output_folder)) return 1;
 	lsh->display();
 
@@ -193,6 +178,7 @@ int kfn_of_rqalsh_star(				// c-k-AFN search of RQALSH*
 	//  release space
 	// -------------------------------------------------------------------------
 	delete lsh; lsh = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -209,14 +195,10 @@ int indexing_of_rqalsh(				// indexing of RQALSH
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "rqalsh.out");
+	strcpy(output_set, output_folder); strcat(output_set, "rqalsh.out");
 	
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  indexing of RQALSH
@@ -233,11 +215,18 @@ int indexing_of_rqalsh(				// indexing of RQALSH
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
 		(g_end_time.tv_usec - g_start_time.tv_usec) / 1000000.0f;
-	printf("Indexing Time: %f Seconds\n\n", indexing_time);
-	fprintf(fp, "Indexing Time = %f Seconds\n\n", indexing_time);
+	printf("Indexing Time = %f Seconds\n", indexing_time);
+	printf("Memory = %f MB\n\n", g_memory / 1048576.0f);
+	
+	fprintf(fp, "index_time = %f Seconds\n", indexing_time);
+	fprintf(fp, "memory     = %f MB\n\n", g_memory / 1048576.0f);
 	fclose(fp);
 
+	// -------------------------------------------------------------------------
+	//  release space
+	// -------------------------------------------------------------------------
 	delete lsh; lsh = NULL;
+	assert(g_memory == 0);
 	
 	return 0;
 }
@@ -252,14 +241,10 @@ int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "rqalsh.out");
+	strcpy(output_set, output_folder); strcat(output_set, "rqalsh.out");
 	
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  load RQALSH
@@ -287,7 +272,7 @@ int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
 		g_io     = 0;
 		for (int i = 0; i < qn; ++i) {
 			list->reset();
-			g_io += lsh->kfn(top_k, query[i], data_folder, list);
+			g_io += lsh->kfn(top_k, query[i], NULL, data_folder, list);
 			g_recall += calc_recall(top_k, R[i], list);
 
 			float ratio = 0.0f;
@@ -319,6 +304,7 @@ int kfn_of_rqalsh(					// c-k-AFN search of RQALSH
 	//  release space
 	// -------------------------------------------------------------------------
 	delete lsh; lsh = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -334,14 +320,10 @@ int indexing_of_drusilla_select(	// indexing of Drusilla_Select
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "drusilla.out");
+	strcpy(output_set, output_folder); strcat(output_set, "drusilla.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  Indexing of Drusilla_Select
@@ -354,11 +336,18 @@ int indexing_of_drusilla_select(	// indexing of Drusilla_Select
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
 		(g_end_time.tv_usec - g_start_time.tv_usec) / 1000000.0f;
-	printf("Indexing Time: %f Seconds\n\n", indexing_time);
-	fprintf(fp, "Indexing Time = %f Seconds\n\n", indexing_time);
+	printf("Indexing Time = %f Seconds\n", indexing_time);
+	printf("Memory = %f MB\n\n", g_memory / 1048576.0f);
+	
+	fprintf(fp, "index_time = %f Seconds\n", indexing_time);
+	fprintf(fp, "memory     = %f MB\n\n", g_memory / 1048576.0f);
 	fclose(fp);
 
+	// -------------------------------------------------------------------------
+	//  release space
+	// -------------------------------------------------------------------------
 	delete drusilla; drusilla = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -373,14 +362,10 @@ int kfn_of_drusilla_select(			// c-k-AFN via Drusilla_Select
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "drusilla.out");
+	strcpy(output_set, output_folder); strcat(output_set, "drusilla.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  load index of Drusilla_Select
@@ -436,6 +421,7 @@ int kfn_of_drusilla_select(			// c-k-AFN via Drusilla_Select
 	//  Release space
 	// -------------------------------------------------------------------------
 	delete drusilla; drusilla = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -452,14 +438,10 @@ int indexing_of_qdafn(				// indexing of QDAFN
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "qdafn.out");
+	strcpy(output_set, output_folder); strcat(output_set, "qdafn.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  Indexing of QDAFN
@@ -475,14 +457,18 @@ int indexing_of_qdafn(				// indexing of QDAFN
 	gettimeofday(&g_end_time, NULL);
 	float indexing_time = g_end_time.tv_sec - g_start_time.tv_sec + 
 		(g_end_time.tv_usec - g_start_time.tv_usec) / 1000000.0f;
-	printf("Indexing Time: %f Seconds\n\n", indexing_time);
-	fprintf(fp, "Indexing Time = %f Seconds\n\n", indexing_time);
+	printf("Indexing Time = %f Seconds\n", indexing_time);
+	printf("Memory = %f MB\n\n", g_memory / 1048576.0f);
+	
+	fprintf(fp, "index_time = %f Seconds\n", indexing_time);
+	fprintf(fp, "memory     = %f MB\n\n", g_memory / 1048576.0f);
 	fclose(fp);
 
 	// -------------------------------------------------------------------------
 	//  Release space
 	// -------------------------------------------------------------------------
 	delete qdafn; qdafn = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }
@@ -497,14 +483,10 @@ int kfn_of_qdafn(					// c-k-AFN via QDAFN
 	const char *output_folder)			// output folder
 {
 	char output_set[200];
-	strcpy(output_set, output_folder);
-	strcat(output_set, "qdafn.out");
+	strcpy(output_set, output_folder); strcat(output_set, "qdafn.out");
 
 	FILE *fp = fopen(output_set, "a+");
-	if (!fp) {
-		printf("Could not create %s\n", output_set);
-		return 1;
-	}
+	if (!fp) { printf("Could not create %s\n", output_set); return 1; }
 
 	// -------------------------------------------------------------------------
 	//  load index of QDAFN
@@ -563,6 +545,7 @@ int kfn_of_qdafn(					// c-k-AFN via QDAFN
 	//  Release space
 	// -------------------------------------------------------------------------
 	delete qdafn; qdafn = NULL;
+	assert(g_memory == 0);
 
 	return 0;
 }

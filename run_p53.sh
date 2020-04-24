@@ -27,10 +27,8 @@ dFolder=data/${dname}/
 # ------------------------------------------------------------------------------
 beta=100
 delta=0.49
-L_list=(4) 
-M_list=(6)
-# L_list=(2 3 4 5 6 8 12) 
-# M_list=(12 8 6 5 4 3 2)
+L_list=(2 3 4 5 6 8 12) 
+M_list=(12 8 6 5 4 3 2)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -46,26 +44,24 @@ do
         -df ${dFolder} -of ${oFolder}
 done
 
-# # ------------------------------------------------------------------------------
-# #  RQALSH
-# # ------------------------------------------------------------------------------
-# beta=100
-# delta=0.49
-# oFolder=${rPath}/rqalsh/
+# ------------------------------------------------------------------------------
+#  RQALSH
+# ------------------------------------------------------------------------------
+beta=100
+delta=0.49
+oFolder=${rPath}/rqalsh/
 
-# ./rqalsh -alg 3 -n ${n} -d ${d} -B ${B} -beta ${beta} -delta ${delta} -c ${c} \
-#     -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 3 -n ${n} -d ${d} -B ${B} -beta ${beta} -delta ${delta} -c ${c} \
+    -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
 
-# ./rqalsh -alg 4 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
-#     -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 4 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
+    -df ${dFolder} -of ${oFolder}
 
 # ------------------------------------------------------------------------------
 #  Drusilla_Select
 # ------------------------------------------------------------------------------
-L_list=(3) 
-M_list=(8)
-# L_list=(2 3 4 5 6 8 12) 
-# M_list=(12 8 6 5 4 3 2)
+L_list=(2 3 4 5 6 8 12) 
+M_list=(12 8 6 5 4 3 2)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -81,43 +77,43 @@ do
         -df ${dFolder} -of ${oFolder}
 done
 
-# # ------------------------------------------------------------------------------
-# #  QDAFN (Guarantee mode)
-# # ------------------------------------------------------------------------------
-# L=0
-# M=0
-# oFolder=${rPath}/qdafn/guarantee/
+# ------------------------------------------------------------------------------
+#  QDAFN (Guarantee mode)
+# ------------------------------------------------------------------------------
+L=0
+M=0
+oFolder=${rPath}/qdafn/guarantee/
 
-# ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${L} -M ${M} -c ${c} -ds ${dPath}.ds \
-#     -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${L} -M ${M} -c ${c} -ds ${dPath}.ds \
+    -df ${dFolder} -of ${oFolder}
 
-# ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
-#     -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
+    -df ${dFolder} -of ${oFolder}
 
-# # ------------------------------------------------------------------------------
-# #  QDAFN (Heuristic mode)
-# # ------------------------------------------------------------------------------
-# proj=10
-# cand=21
-# for ((i=2; i<=3; i=i+1))
-# do
-#     proj=$(($proj + 10))
-#     for ((j=1; j<=5; j=j+1))
-#     do
-#         oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
+# ------------------------------------------------------------------------------
+#  QDAFN (Heuristic mode)
+# ------------------------------------------------------------------------------
+proj=10
+cand=21
+for ((i=2; i<=3; i=i+1))
+do
+    proj=$(($proj + 10))
+    for ((j=1; j<=5; j=j+1))
+    do
+        oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
 
-#         ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
-#             -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
+        ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
+            -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
       
-#         ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
-#             -df ${dFolder} -of ${oFolder}
-#     done
-# done
+        ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
+            -df ${dFolder} -of ${oFolder}
+    done
+done
 
-# # ------------------------------------------------------------------------------
-# #  Linear Scan
-# # ------------------------------------------------------------------------------
-# oFolder=${rPath}/
+# ------------------------------------------------------------------------------
+#  Linear Scan
+# ------------------------------------------------------------------------------
+oFolder=${rPath}/
 
-# ./rqalsh -alg 9 -n ${n} -qn ${qn} -d ${d} -B ${B} -qs ${dPath}.q \
-#     -ts ${dPath}.fn${c} -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 9 -n ${n} -qn ${qn} -d ${d} -B ${B} -qs ${dPath}.q \
+    -ts ${dPath}.fn${c} -df ${dFolder} -of ${oFolder}

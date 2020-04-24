@@ -1,6 +1,18 @@
 #ifndef __B_TREE_H
 #define __B_TREE_H
 
+#include <iostream>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <vector>
+
+#include "def.h"
+#include "util.h"
+#include "block_file.h"
+#include "b_node.h"
+
 struct Result;
 class  BlockFile;
 class  B_Node;

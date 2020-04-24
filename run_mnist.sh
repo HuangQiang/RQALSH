@@ -92,25 +92,25 @@ oFolder=${rPath}/qdafn/guarantee/
 ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
     -df ${dFolder} -of ${oFolder}
 
-# # ------------------------------------------------------------------------------
-# #  QDAFN (Heuristic mode)
-# # ------------------------------------------------------------------------------
-# proj=10
-# for ((i=2; i<=10; i=i+1))
-# do
-#     proj=$(($proj + 10))
-#     cand=$((273 - $proj))	
-#     for ((j=1; j<=5; j=j+1))
-#     do
-#         oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
+# ------------------------------------------------------------------------------
+#  QDAFN (Heuristic mode)
+# ------------------------------------------------------------------------------
+proj=10
+for ((i=2; i<=10; i=i+1))
+do
+    proj=$(($proj + 10))
+    cand=$((273 - $proj))	
+    for ((j=1; j<=5; j=j+1))
+    do
+        oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
 
-#         ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
-#             -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
+        ./rqalsh -alg 7 -n ${n} -d ${d} -B ${B} -L ${proj} -M ${cand} -c ${c} \
+            -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
       
-#         ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
-#             -df ${dFolder} -of ${oFolder}
-#     done
-# done
+        ./rqalsh -alg 8 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
+            -df ${dFolder} -of ${oFolder}
+    done
+done
 
 # ------------------------------------------------------------------------------
 #  Linear Scan

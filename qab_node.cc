@@ -1,13 +1,4 @@
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-
-#include "def.h"
-#include "util.h"
-#include "block_file.h"
 #include "qab_node.h"
-#include "qab_tree.h"
-
 
 // -----------------------------------------------------------------------------
 //  QAB_Node: query-aware node in query-aware b-tree
