@@ -1,20 +1,20 @@
 #!/bin/bash
-make
 make clean
+make -j
 
 # ------------------------------------------------------------------------------
 #  Parameters
 # ------------------------------------------------------------------------------
-dname=Trevi
-n=99900
+dname=Sift
+n=999000
 qn=1000
-d=4096
-B=65536
+d=128
+B=4096
 c=2.0
 
-dPath=data/${dname}/${dname}
-rPath=results${c}/${dname}
-dFolder=data/${dname}/
+dPath=../data/${dname}/${dname}
+rPath=../results${c}/${dname}
+dFolder=../data/${dname}/
 
 # ------------------------------------------------------------------------------
 #  Ground Truth 
@@ -27,8 +27,8 @@ dFolder=data/${dname}/
 # ------------------------------------------------------------------------------
 beta=100
 delta=0.49
-L_list=(2 3 5 6 10 15) 
-M_list=(15 10 6 5 3 2)
+L_list=(2 3 4 5 6 10 15 20 30 50 60 75 100 150) 
+M_list=(150 100 75 60 50 30 20 15 10 6 5 4 3 2)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -54,14 +54,14 @@ oFolder=${rPath}/rqalsh/
 ./rqalsh -alg 3 -n ${n} -d ${d} -B ${B} -beta ${beta} -delta ${delta} -c ${c} \
     -ds ${dPath}.ds -df ${dFolder} -of ${oFolder}
 
-./rqalsh -alg 4 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn2.0 \
+./rqalsh -alg 4 -qn ${qn} -d ${d} -qs ${dPath}.q -ts ${dPath}.fn${c} \
     -df ${dFolder} -of ${oFolder}
 
 # ------------------------------------------------------------------------------
 #  Drusilla_Select
 # ------------------------------------------------------------------------------
-L_list=(2 3 5 6 10 15) 
-M_list=(15 10 6 5 3 2)
+L_list=(2 3 4 6 11 12 22 33 44 66) 
+M_list=(66 44 33 22 12 11 6 4 3 2)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -93,11 +93,9 @@ oFolder=${rPath}/qdafn/guarantee/
 # ------------------------------------------------------------------------------
 #  QDAFN (Heuristic mode)
 # ------------------------------------------------------------------------------
-proj=10
-cand=27
-for ((i=2; i<=10; i=i+1))
+cand=122
+for proj in 50 60 70 80 90 100
 do
-    proj=$(($proj + 10))
     for ((j=1; j<=5; j=j+1))
     do
         oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/
@@ -115,5 +113,5 @@ done
 # ------------------------------------------------------------------------------
 oFolder=${rPath}/
 
-./rqalsh -alg 5 -n ${n} -qn ${qn} -d ${d} -B ${B} -qs ${dPath}.q \
-    -ts ${dPath}.fn2.0 -df ${dFolder} -of ${oFolder}
+./rqalsh -alg 9 -n ${n} -qn ${qn} -d ${d} -B ${B} -qs ${dPath}.q \
+    -ts ${dPath}.fn${c} -df ${dFolder} -of ${oFolder}

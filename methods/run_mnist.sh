@@ -1,20 +1,20 @@
 #!/bin/bash
-make
 make clean
+make -j
 
 # ------------------------------------------------------------------------------
 #  Parameters
 # ------------------------------------------------------------------------------
-dname=P53
-n=30159
+dname=Mnist
+n=59000
 qn=1000
-d=5408
-B=65536
+d=50
+B=4096
 c=2.0
 
-dPath=data/${dname}/${dname}
-rPath=results${c}/${dname}
-dFolder=data/${dname}/
+dPath=../data/${dname}/${dname}
+rPath=../results${c}/${dname}
+dFolder=../data/${dname}/
 
 # ------------------------------------------------------------------------------
 #  Ground Truth 
@@ -27,8 +27,10 @@ dFolder=data/${dname}/
 # ------------------------------------------------------------------------------
 beta=100
 delta=0.49
-L_list=(2 3 4 5 6 8 12) 
-M_list=(12 8 6 5 4 3 2)
+L_list=(1500) 
+M_list=(2)
+# L_list=(1500 1000 750 600 500 300 200 150 100 75 60 50 40 30 20 15 10 6 5 4 3 2) 
+# M_list=(2 3 4 5 6 10 15 20 30 40 50 60 75 100 150 200 300 500 600 750 1000 1500)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -60,8 +62,8 @@ oFolder=${rPath}/rqalsh/
 # ------------------------------------------------------------------------------
 #  Drusilla_Select
 # ------------------------------------------------------------------------------
-L_list=(2 3 4 5 6 8 12) 
-M_list=(12 8 6 5 4 3 2)
+L_list=(16) 
+M_list=(18)
 length=`expr ${#L_list[*]} - 1`
 
 for j in $(seq 0 ${length})
@@ -94,10 +96,10 @@ oFolder=${rPath}/qdafn/guarantee/
 #  QDAFN (Heuristic mode)
 # ------------------------------------------------------------------------------
 proj=10
-cand=21
-for ((i=2; i<=3; i=i+1))
+for ((i=2; i<=10; i=i+1))
 do
     proj=$(($proj + 10))
+    cand=$((273 - $proj))	
     for ((j=1; j<=5; j=j+1))
     do
         oFolder=${rPath}/qdafn/heuristic/${proj}_${j}/

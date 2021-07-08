@@ -1,6 +1,8 @@
-# RQALSH: Reverse Query-Aware Locality-Sensitive Hashing
+## RQALSH: Reverse Query-Aware Locality-Sensitive Hashing
 
-## Introduction
+<p align="center"><img src="imgs/rqalsh.jpg" alt="drawing" width="450"/></p>
+
+### Introduction
 
 This package provides two external LSH schemes RQALSH and RQALSH<sup>*</sup> for high-dimensional ```c-Approximate Furthest Neighbor (c-AFN)``` search from the following two papers:
 
@@ -14,7 +16,7 @@ High-Dimensional Furthest Neighbor Search. IEEE Transactions on Knowledge and Da
 Engineering (TKDE), 29(12): 2772–2785, 2017.
 ```
 
-## Compilation
+### Compilation
 
 The package requires ```g++``` with ```c++11``` support. To download and compile the code, type:
 
@@ -24,7 +26,7 @@ $ cd RQALSH
 $ make
 ```
 
-## Datasets
+### Datasets
 
 We use four real-life datasets [Sift](https://drive.google.com/open?id=1tgcUU9X61TehVa_Klj5skVdYRoYZ7CgX), [Gist](https://drive.google.com/open?id=1fvUTGUbYgg8oaGNbZbAMLnfmxoU8UDhh), [Trevi](https://drive.google.com/open?id=1XSiiQ6D1zoxGXULl3sHxsjPO8JCM-md1), and [P53](https://drive.google.com/open?id=1hjGvcq29WsgHpGoz0vCdCYAUR453aY29) for comparison. We randomly remove 1,000 data objects from each dataset and use them as queries. The statistics of datasets and queries are summarized in the following table:
 
@@ -35,7 +37,7 @@ We use four real-life datasets [Sift](https://drive.google.com/open?id=1tgcUU9X6
 | Trevi    | 100,900   | 1000     | 4,096          | 64 KB     | [0, 255]    | 1.5 GB    |
 | P53      | 31,159    | 1000     | 5,408          | 64 KB     | [0, 10,000] | 833.7 MB  |
 
-## Run Experiments
+### Run Experiments
 
 ```bash
 Usage: qalsh [OPTIONS]
@@ -75,7 +77,7 @@ We provide the scripts to repeat experiments reported in TKDE 2017. A quick exam
 
 If you would like to get more information to run other algorithms, please check the scripts in the package. When you run the package, please ensure that the path for the dataset, query set, and truth set is correct. Since the package will automatically create folder for the output path, please keep the path as short as possible.
 
-## Related Publications
+### Related Publications
 
 If you use this package for publications, please cite the papers as follows.
 
