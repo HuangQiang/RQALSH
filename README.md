@@ -1,29 +1,17 @@
 ## RQALSH: Reverse Query-Aware Locality-Sensitive Hashing
 
-<p align="center"><img src="imgs/rqalsh.jpg" alt="drawing" width="450"/></p>
-
 ### Introduction
 
-This package provides two external LSH schemes RQALSH and RQALSH<sup>*</sup> for high-dimensional ```c-Approximate Furthest Neighbor (c-AFN)``` search from the following two papers:
-
-```bash
-Qiang Huang, Jianlin Feng, Qiong Fang. Reverse Query-Aware Locality-Sensitive
-Hashing for High-Dimensional Furthest Neighbor Search. 2017 IEEE 33rd International 
-Conference on Data Engineering (ICDE), pages 167-170, 2017.
-
-Qiang Huang, Jianlin Feng, Qiong Fang, Wilfred Ng. Two Efficient Hashing Schemes for 
-High-Dimensional Furthest Neighbor Search. IEEE Transactions on Knowledge and Data 
-Engineering (TKDE), 29(12): 2772–2785, 2017.
-```
+This package provides two external LSH schemes RQALSH and RQALSH<sup>*</sup> for high-dimensional c-Approximate Furthest Neighbor Search.
 
 ### Compilation
 
 The package requires ```g++``` with ```c++11``` support. To download and compile the code, type:
 
 ```bash
-$ git clone https://github.com/HuangQiang/RQALSH.git
-$ cd RQALSH
-$ make
+git clone git@github.com/HuangQiang/RQALSH.git
+cd RQALSH
+make -j
 ```
 
 ### Datasets
